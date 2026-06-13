@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Transaction Ledger</title>
+    <!-- Google Fonts: Inter for professional enterprise typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Main ERP Container -->
+    <div class="erp-container">
+        
+        <!-- Sidebar Navigation (Fixed) -->
+        <aside class="erp-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">💎</span>
+                <span class="brand-text">RV GEMS ERP</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Administrator</span>
+                        <span class="user-role">Billing Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="erp-main">
+            <!-- Top Navigation / Header -->
+            <header class="erp-header">
+                <div class="header-left">
+                    <h1 id="page-title">Transaction Details</h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+                        ← Dashboard
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Container -->
+            <main class="erp-content">
+                
+                <!-- MODULE 3: TRANSACTION DETAILS & PAYMENT TRACKING -->
+                <section id="view-details" class="content-module active-view">
+                    <div class="back-bar">
+                        <button class="btn btn-secondary btn-compact" onclick="window.location.href='index.html'">← Back to Dashboard</button>
+                        <span class="details-nav-title">Sale Invoice: <strong id="details-invoice-no">#0000</strong></span>
+                    </div>
+
+                    <div class="details-grid">
+                        <!-- Left Panel: Transaction summary and Invoice layout -->
+                        <div class="details-panel card">
+                            <div class="invoice-container" id="printable-invoice">
+                                <div class="invoice-header">
+                                    <div>
+                                        <h2>RV GEMS</h2>
+                                        <p class="invoice-meta" id="lbl-inv-type-title">Sale Entry Invoice Receipt</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="invoice-label" id="lbl-inv-no-label">Selling No: <strong id="lbl-inv-selling-no">#1</strong></div>
+                                        <div class="invoice-label">Date: <span id="lbl-inv-date">23/10/2025</span></div>
+                                        <div class="invoice-label">Deadline: <span id="lbl-inv-deadline">-</span></div>
+                                    </div>
+                                </div>
+
+                                <div class="invoice-parties">
+                                    <div class="party-col">
+                                        <span class="invoice-subtitle" id="lbl-inv-party-type">Buyer Party</span>
+                                        <h3 id="lbl-inv-party">RV Gems</h3>
+                                    </div>
+                                    <div class="party-col text-right">
+                                        <span class="invoice-subtitle">Broker (Dalal)</span>
+                                        <h3 id="lbl-inv-dalal">Keshav</h3>
+                                    </div>
+                                </div>
+
+                                <div class="invoice-table-wrapper">
+                                    <table class="invoice-details-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Description</th>
+                                                <th class="text-right">Qty (Pcs)</th>
+                                                <th class="text-right">Weight (Carats)</th>
+                                                <th class="text-right">Rate / Price</th>
+                                                <th class="text-right">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <strong>Rough / Polished Diamonds Selection</strong><br>
+                                                    <span class="text-muted" id="lbl-inv-currency-details">Currency: Dollar ($200.00 @ 93.13)</span>
+                                                </td>
+                                                <td class="text-right" id="lbl-inv-pcs">2</td>
+                                                <td class="text-right" id="lbl-inv-carat">3.200</td>
+                                                <td class="text-right" id="lbl-inv-price">₹18,626.00</td>
+                                                <td class="text-right" id="lbl-inv-total-price">₹59,603.20</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="invoice-summary-block">
+                                    <div class="invoice-summary-row">
+                                        <span>Gross Total Price:</span>
+                                        <span id="lbl-inv-gross">₹59,603.20</span>
+                                    </div>
+                                    <div class="invoice-summary-row">
+                                        <span>Discount (<span id="lbl-inv-discount-pct">10</span>%):</span>
+                                        <span id="lbl-inv-discount-amt">₹5,960.32</span>
+                                    </div>
+                                    <div class="invoice-summary-row border-top">
+                                        <span>Discounted Amount:</span>
+                                        <span id="lbl-inv-discounted-total">₹53,642.88</span>
+                                    </div>
+                                    <div class="invoice-summary-row" id="row-inv-dalali">
+                                        <span>Dalali (<span id="lbl-inv-dalali-pct">3</span>%):</span>
+                                        <span id="lbl-inv-dalali-amt">₹1,609.29</span>
+                                    </div>
+                                    
+                                    <div class="invoice-split-details">
+                                        <div class="split-account-header">Account Split Breakdown (Bill: <span id="lbl-inv-bill-pct">30</span>% / Cash: <span id="lbl-inv-cash-pct">70</span>%)</div>
+                                        <div class="invoice-summary-row font-small">
+                                            <span>Bill Amount (Base):</span>
+                                            <span id="lbl-inv-bill-base">₹16,092.86</span>
+                                        </div>
+                                        <div class="invoice-summary-row font-small">
+                                            <span id="lbl-inv-gst-rate-desc">GST (0.25% on Bill):</span>
+                                            <span id="lbl-inv-gst">₹40.23</span>
+                                        </div>
+                                        <div class="invoice-summary-row font-small border-bottom">
+                                            <span>Net Bill Amount:</span>
+                                            <span id="lbl-inv-net-bill">₹16,133.09</span>
+                                        </div>
+                                        <div class="invoice-summary-row font-small border-bottom">
+                                            <span>Net Cash Amount:</span>
+                                            <span id="lbl-inv-net-cash">₹37,550.02</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="invoice-summary-row final-total-row">
+                                        <span>Final Net Amount:</span>
+                                        <h3 id="lbl-inv-final">₹55,292.40</h3>
+                                    </div>
+                                </div>
+                                
+                                <div class="invoice-footer">
+                                    <p>Thank you for your business. Systems Generated Document.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="invoice-actions">
+                                <button class="btn btn-secondary" onclick="window.print()">🖨️ Print Invoice</button>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Payment Tracker & Accounting Entries -->
+                        <div class="accounting-panel">
+                            
+                            <!-- Financial Progress Cards -->
+                            <div class="ledger-cards">
+                                <div class="ledger-card card">
+                                    <span class="ledger-card-title">Net Bill Balance</span>
+                                    <div class="ledger-card-value" id="det-bill-bal">₹0.00</div>
+                                    <div class="ledger-card-sub">Paid: <span id="det-bill-paid">₹0.00</span> | Rem: <span id="det-bill-rem">₹0.00</span></div>
+                                </div>
+                                
+                                <div class="ledger-card card">
+                                    <span class="ledger-card-title">Net Cash Balance</span>
+                                    <div class="ledger-card-value" id="det-cash-bal">₹0.00</div>
+                                    <div class="ledger-card-sub">Paid: <span id="det-cash-paid">₹0.00</span> | Rem: <span id="det-cash-rem">₹0.00</span></div>
+                                </div>
+
+                                <div class="ledger-card card" id="card-dalali-bal">
+                                    <span class="ledger-card-title">Brokerage (Dalali) Balance</span>
+                                    <div class="ledger-card-value" id="det-dalali-bal">₹0.00</div>
+                                    <div class="ledger-card-sub">Paid: <span id="det-dalali-paid">₹0.00</span> | Rem: <span id="det-dalali-rem">₹0.00</span></div>
+                                </div>
+                            </div>
+
+                            <div class="card payment-summary-card">
+                                <div class="progress-container">
+                                    <div class="progress-labels">
+                                        <span id="lbl-progress-title">Overall Payment Progress</span>
+                                        <span id="det-payment-pct">0% Paid</span>
+                                    </div>
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-bar-fill" id="det-progress-bar" style="width: 0%;"></div>
+                                    </div>
+                                    <div class="progress-stats">
+                                        <span id="lbl-progress-received">Received: <strong id="det-total-paid">₹0.00</strong></span>
+                                        <span>Outstanding: <strong id="det-total-outstanding" class="text-orange">₹53,683.11</strong></span>
+                                    </div>
+                                    <div class="progress-stats form-sub-section">
+                                        <span>Preset Deadline: <strong id="det-deadline-date">-</strong></span>
+                                        <span id="det-days-remaining" class="text-muted">(-- Days Left)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Record a Payment Form -->
+                            <div class="card payment-entry-card">
+                                <h3 class="panel-section-title" id="lbl-add-payment-title">Add Payment Entry</h3>
+                                <form id="payment-form" onsubmit="addPaymentEntry(event)">
+                                    <div class="form-group-row">
+                                        <div class="form-control">
+                                            <label for="payment-type">Payment Type <span class="required">*</span></label>
+                                            <select id="payment-type" required>
+                                                <option value="Bill">Bill Account</option>
+                                                <option value="Cash">Cash Account</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-control">
+                                            <label for="payment-amount" id="lbl-payment-amount-label">Received Amount (₹) <span class="required">*</span></label>
+                                            <input type="number" id="payment-amount" required min="1" step="1" placeholder="e.g. 10000">
+                                        </div>
+                                    </div>
+                                    <div class="form-group-row">
+                                        <div class="form-control">
+                                            <label for="payment-date">Payment Date <span class="required">*</span></label>
+                                            <input type="date" id="payment-date" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions-compact">
+                                        <button type="submit" class="btn btn-primary btn-full">Submit Payment Entry</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Payment History Ledger -->
+                            <div class="card ledger-history-card">
+                                <h3 class="panel-section-title">Payment History Ledger</h3>
+                                <div class="table-container-compact">
+                                    <table class="erp-table compact-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Type</th>
+                                                <th class="text-right">Amount</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="payment-history-body">
+                                            <!-- Dynamic rows -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="js/shared.js"></script>
+    <script src="js/ledger_details.js"></script>
+</body>
+</html>
+

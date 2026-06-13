@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Entry Records</title>
+    <meta name="description" content="Single-screen entry list viewer for all RV Gems modules — Rough, Polish, and Box transactions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+<div class="erp-container">
+
+    <!-- Sidebar -->
+    <aside class="erp-sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">💎</span>
+            <span class="brand-text">RV GEMS ERP</span>
+        </div>
+        <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item active" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <div class="user-info">
+                    <span class="user-name">Administrator</span>
+                    <span class="user-role">Records Viewer</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="erp-main">
+        <header class="erp-header">
+            <div class="header-left">
+                <h1>Entry Records</h1>
+            </div>
+            <div class="header-right">
+                <span id="records-last-sync" class="last-sync-span"></span>
+                <button class="btn btn-secondary" onclick="window.location.href='index.html'">Dashboard</button>
+            </div>
+        </header>
+
+        <main class="erp-content">
+
+            <!-- ── TAB NAVIGATION ── -->
+            <div class="rec-tab-nav">
+                <button class="rec-tab active" data-tab="rough-buy"
+                        onclick="switchTab('rough-buy',this)">
+                    <span class="rec-tab-icon">📥</span> Rough Buy
+                    <span class="rec-tab-badge" id="cnt-rough-buy">0</span>
+                </button>
+                <button class="rec-tab" data-tab="rough-sale"
+                        onclick="switchTab('rough-sale',this)">
+                    <span class="rec-tab-icon">📝</span> Rough Sale
+                    <span class="rec-tab-badge" id="cnt-rough-sale">0</span>
+                </button>
+                <button class="rec-tab" data-tab="polish-buy"
+                        onclick="switchTab('polish-buy',this)">
+                    <span class="rec-tab-icon">📦</span> Polish Buy
+                    <span class="rec-tab-badge" id="cnt-polish-buy">0</span>
+                </button>
+                <button class="rec-tab" data-tab="polish-sale"
+                        onclick="switchTab('polish-sale',this)">
+                    <span class="rec-tab-icon">✨</span> Polish Sale
+                    <span class="rec-tab-badge" id="cnt-polish-sale">0</span>
+                </button>
+                <button class="rec-tab" data-tab="box-making"
+                        onclick="switchTab('box-making',this)">
+                    <span class="rec-tab-icon">🔷</span> Box Making
+                    <span class="rec-tab-badge" id="cnt-box-making">0</span>
+                </button>
+                <button class="rec-tab" data-tab="box-selling"
+                        onclick="switchTab('box-selling',this)">
+                    <span class="rec-tab-icon">🏷️</span> Box Selling
+                    <span class="rec-tab-badge" id="cnt-box-selling">0</span>
+                </button>
+                <button class="rec-tab" data-tab="transfers"
+                        onclick="switchTab('transfers',this)">
+                    <span class="rec-tab-icon">🔄</span> Transfer Records
+                    <span class="rec-tab-badge" id="cnt-transfers">0</span>
+                </button>
+                <button class="rec-tab" data-tab="vendors"
+                        onclick="switchTab('vendors',this)">
+                    <span class="rec-tab-icon">🤝</span> Vendor Records
+                    <span class="rec-tab-badge" id="cnt-vendors">0</span>
+                </button>
+            </div>
+
+            <!-- ── TAB PANELS ── -->
+            <div id="panel-rough-buy"   class="rec-panel active"></div>
+            <div id="panel-rough-sale"  class="rec-panel"></div>
+            <div id="panel-polish-buy"  class="rec-panel"></div>
+            <div id="panel-polish-sale" class="rec-panel"></div>
+            <div id="panel-box-making"  class="rec-panel"></div>
+            <div id="panel-box-selling" class="rec-panel"></div>
+            <div id="panel-transfers"   class="rec-panel"></div>
+            <div id="panel-vendors"     class="rec-panel"></div>
+
+        </main>
+    </div>
+</div>
+
+<script src="js/shared.js"></script>
+<script src="js/records.js"></script>
+</body>
+</html>
+

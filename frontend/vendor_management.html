@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Vendor Management</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+    <div class="erp-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="erp-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">💎</span>
+                <span class="brand-text">RV GEMS ERP</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item active" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Administrator</span>
+                        <span class="user-role">Billing Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="erp-main">
+            <header class="erp-header">
+                <div class="header-left">
+                    <h1 id="page-title">Vendor Management</h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" onclick="window.location.href='index.html'">Dashboard</button>
+                </div>
+            </header>
+
+            <main class="erp-content">
+                
+                <div class="grid-layout">
+                    
+                    <!-- VENDOR MASTER -->
+                    <div class="form-section">
+                        <h3 class="section-title">Vendor Master</h3>
+                        
+                        <!-- Register Vendor Form -->
+                        <form id="vendor-form" onsubmit="saveVendorMaster(event)" autocomplete="off">
+                            <div class="form-group-row">
+                                <div class="form-control">
+                                    <label for="vendor-id">Vendor ID</label>
+                                    <input type="text" id="vendor-id" readonly class="readonly-input" placeholder="V000">
+                                </div>
+                                <div class="form-control">
+                                    <label for="vendor-name">Name <span class="required">*</span></label>
+                                    <input type="text" id="vendor-name" required placeholder="Kishorbhai">
+                                </div>
+                            </div>
+                            <div class="form-group-row">
+                                <div class="form-control">
+                                    <label for="vendor-type">Type <span class="required">*</span></label>
+                                    <select id="vendor-type" required>
+                                        <option value="Dalal">Dalal</option>
+                                        <option value="Party">Party</option>
+                                        <option value="Broker">Broker</option>
+                                        <option value="Agent">Agent</option>
+                                        <option value="Trader">Trader</option>
+                                        <option value="Customer">Customer</option>
+                                    </select>
+                                </div>
+                                <div class="form-control">
+                                    <label for="vendor-city">City <span class="required">*</span></label>
+                                    <input type="text" id="vendor-city" required placeholder="Mumbai">
+                                </div>
+                                <div class="form-control">
+                                    <label for="vendor-mobile">Mobile <span class="required">*</span></label>
+                                    <input type="tel" id="vendor-mobile" required placeholder="9876543210">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">➕ Register Vendor</button>
+                            </div>
+                        </form>
+
+                        <!-- Registered Vendors List -->
+                        <h4 class="form-sub-title mt-md">Registered Vendors</h4>
+                        <div class="table-responsive max-h-200">
+                            <table class="ledger-table w-full">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>City</th>
+                                        <th>Mobile</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vendors-list-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- VENDOR ISSUE FORM (CONSIGNMENT) -->
+                    <div class="form-section">
+                        <h3 class="section-title">Issue Inventory (From Mumbai)</h3>
+                        <form id="issue-form" onsubmit="saveInventoryIssue(event)" autocomplete="off">
+                            <div class="form-group-row">
+                                <div class="form-control">
+                                    <label for="issue-no">Issue Number</label>
+                                    <input type="text" id="issue-no" readonly class="readonly-input" placeholder="ISS-XXX">
+                                </div>
+                                <div class="form-control">
+                                    <label for="issue-date">Issue Date <span class="required">*</span></label>
+                                    <input type="date" id="issue-date" required>
+                                </div>
+                                <div class="form-control flex-2">
+                                    <label for="issue-vendor-id">Select Vendor <span class="required">*</span></label>
+                                    <select id="issue-vendor-id" required>
+                                        <!-- Registered vendors loaded here -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- ITEM STAGING PANEL -->
+                            <div class="staged-area-card">
+                                <h4 class="form-sub-title mt-0">Stage Items to Issue</h4>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="stage-type">Item Type</label>
+                                        <select id="stage-type" onchange="handleStageTypeChange()">
+                                            <option value="Polish">Polish Lot</option>
+                                            <option value="Dabbi">Dabbi Box</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-control flex-2">
+                                        <label for="stage-item-select">Select Item</label>
+                                        <select id="stage-item-select" onchange="handleStageItemChange()">
+                                            <!-- Dynamically populated from Mumbai Inventory -->
+                                        </select>
+                                    </div>
+                                    <div class="form-control" id="stage-qty-container">
+                                        <label for="stage-qty">Qty</label>
+                                        <input type="number" id="stage-qty" min="1" placeholder="Qty">
+                                        <span class="field-hint" id="stage-avail-hint">Avail: 0</span>
+                                    </div>
+                                </div>
+                                <div class="flex-end">
+                                    <button type="button" class="btn btn-secondary" onclick="addItemToStagedList()">Stage Item</button>
+                                </div>
+
+                                <!-- Staged Items List -->
+                                <h5 class="staged-title">Staged Items Queue</h5>
+                                <div id="staged-items-container" class="staged-items-container">
+                                    <div class="text-center text-muted p-sm mt-0" id="staged-empty-text">No items staged yet</div>
+                                    <!-- Staged items list -->
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">🤝 Issue Consignment</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+                <!-- ACTIVE VENDOR CONSIGNMENTS -->
+                <div class="form-section full-width mt-md">
+                    <h3 class="section-title">Active Consignments (Pending Issues)</h3>
+                    <div class="table-responsive">
+                        <table class="ledger-table w-full">
+                            <thead>
+                                <tr>
+                                    <th>Issue Date</th>
+                                    <th>Issue No</th>
+                                    <th>Vendor Name</th>
+                                    <th>Aging</th>
+                                    <th>Issued Items & Resolution Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="consignments-tbody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                        <div id="consignments-empty" class="empty-state hidden">
+                            <div class="empty-icon">🤝</div>
+                            <h3>No active vendor consignments</h3>
+                            <p>No inventory is currently out with vendors.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/shared.js"></script>
+    <script src="js/vendor_management.js"></script>
+</body>
+</html>
+

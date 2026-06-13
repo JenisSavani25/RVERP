@@ -1,0 +1,1 @@
+I will search the conversation logs for the database schema definition to make sure we map the exact table structures specified by the user.

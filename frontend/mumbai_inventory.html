@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Mumbai Inventory</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+    <div class="erp-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="erp-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">💎</span>
+                <span class="brand-text">RV GEMS ERP</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item active" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Administrator</span>
+                        <span class="user-role">Billing Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="erp-main">
+            <header class="erp-header">
+                <div class="header-left">
+                    <h1 id="page-title">Mumbai Inventory</h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" onclick="window.location.href='index.html'">Dashboard</button>
+                </div>
+            </header>
+
+            <main class="erp-content">
+                <!-- LOCATION SUMMARY WIDGET -->
+                <section class="mb-sm">
+                    <div class="card">
+                        <h3 class="section-title">
+                            🏢 Mumbai Location Summary
+                        </h3>
+                        <div class="mumbai-summary-grid">
+                            <div class="mumbai-summary-card polish">
+                                <div class="msc-label">Total Mumbai Polish</div>
+                                <div class="msc-val" id="sum-mumbai-polish">0 pcs</div>
+                                <div class="msc-sub" id="sum-mumbai-polish-detail">0 Avail | 0 Issued</div>
+                            </div>
+                            <div class="mumbai-summary-card dabbi">
+                                <div class="msc-label">Total Mumbai Dabbis</div>
+                                <div class="msc-val" id="sum-mumbai-dabbis">0 boxes</div>
+                                <div class="msc-sub" id="sum-mumbai-dabbis-detail">0 Avail | 0 Issued</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="grid-two-columns">
+                    
+                    <!-- MUMBAI POLISH INVENTORY -->
+                    <div class="form-section">
+                        <h3 class="section-title">Mumbai Polish Stock</h3>
+                        <div class="table-responsive max-h-500">
+                            <table class="ledger-table w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Lot ID</th>
+                                        <th class="text-right">Total In Mumbai</th>
+                                        <th class="text-right">Issued (Vendor)</th>
+                                        <th class="text-right">Available Qty</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mumbai-polish-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                            <div id="mumbai-polish-empty" class="empty-state hidden p-lg">
+                                <div class="empty-icon">💎</div>
+                                <h3>No Polish diamonds in Mumbai</h3>
+                                <p>Transfer polish stock from Surat to see it listed here.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MUMBAI DABBI INVENTORY -->
+                    <div class="form-section">
+                        <h3 class="section-title">Mumbai Dabbi (Box) Stock</h3>
+                        <div class="table-responsive max-h-500">
+                            <table class="ledger-table w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Box ID</th>
+                                        <th>Shape</th>
+                                        <th class="text-right">Carat</th>
+                                        <th>Status</th>
+                                        <th>Physical Available</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mumbai-dabbi-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                            <div id="mumbai-dabbi-empty" class="empty-state hidden p-lg">
+                                <div class="empty-icon">📦</div>
+                                <h3>No Dabbi boxes in Mumbai</h3>
+                                <p>Transfer Dabbi boxes from Surat to see them listed here.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/shared.js"></script>
+    <script src="js/mumbai_inventory.js"></script>
+</body>
+</html>
+

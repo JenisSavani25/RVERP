@@ -1,0 +1,1 @@
+I will search the logs for the exact tables schema that the user sent to us in the previous turn.

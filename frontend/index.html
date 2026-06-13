@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Sales Dashboard</title>
+    <!-- Google Fonts: Inter for professional enterprise typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Main ERP Container -->
+    <div class="erp-container">
+        
+        <!-- Sidebar Navigation (Fixed) -->
+        <aside class="erp-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">💎</span>
+                <span class="brand-text">RV GEMS ERP</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Administrator</span>
+                        <span class="user-role">Billing Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="erp-main">
+            <!-- Top Navigation / Header -->
+            <header class="erp-header">
+                <div class="header-left">
+                    <h1 id="page-title">Enterprise Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <span id="current-date-display" class="date-badge">--/--/----</span>
+                </div>
+            </header>
+
+            <!-- Content Container -->
+            <main class="erp-content">
+                
+                <!-- MODULE 1: DASHBOARD & TRANSACTIONS VIEW -->
+                <section id="view-dashboard" class="content-module active-view">
+                    <!-- KPI Summary Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Total Sales</span>
+                                <span class="kpi-icon text-blue">💰</span>
+                            </div>
+                            <div class="kpi-value" id="kpi-total-sales">₹0.00</div>
+                            <div class="kpi-sub">Total invoiced sales</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Total Buys</span>
+                                <span class="kpi-icon text-blue">📥</span>
+                            </div>
+                            <div class="kpi-value" id="kpi-total-buys">₹0.00</div>
+                            <div class="kpi-sub">Total purchase purchases</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Receivables (Sales)</span>
+                                <span class="kpi-icon text-orange">⏳</span>
+                            </div>
+                            <div class="kpi-value text-orange" id="kpi-outstanding-sales">₹0.00</div>
+                            <div class="kpi-sub">Pending customer payments</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Payables (Buys)</span>
+                                <span class="kpi-icon text-danger">⏳</span>
+                            </div>
+                            <div class="kpi-value text-danger" id="kpi-outstanding-buys">₹0.00</div>
+                            <div class="kpi-sub">Pending supplier payables</div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Widgets: Live Stock & Recent Activity -->
+                    <div class="dashboard-widgets-grid">
+                        
+                        <!-- Live Inventory Stock Widget -->
+                        <div class="card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border-light); padding-bottom: 4px; margin-bottom: 8px;">
+                                <h3 style="font-size: 12px; font-weight: 600; color: var(--color-primary-dark); margin: 0; display: flex; align-items: center; gap: 6px;">
+                                    📦 Live Stock Summary
+                                </h3>
+                                <button class="btn btn-secondary btn-compact" onclick="window.location.href='inventory.html'">Manage Stock</button>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Rough Stock -->
+                                <div class="stock-item">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-weight: 600;">
+                                        <span>💎 Rough Diamonds</span>
+                                        <span id="widget-rough-stock" style="color: var(--color-primary-light); font-weight: 700;">0 pcs</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--color-text-muted);">
+                                        <span id="widget-rough-ct" style="font-weight: 600;">0.000 ct</span>
+                                        <span>Surat: <strong id="widget-rough-surat">0</strong> | Mumbai: <strong>0</strong></span>
+                                    </div>
+                                </div>
+                                <hr style="border: 0; border-top: 1px dashed var(--color-border-light); margin: 0;">
+                                <!-- Polish Stock -->
+                                <div class="stock-item">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-weight: 600;">
+                                        <span>✨ Polish Stock</span>
+                                        <span id="widget-polish-stock" style="color: #8b5cf6; font-weight: 700;">0 pcs</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--color-text-muted);">
+                                        <span>Surat: <strong id="widget-polish-surat">0</strong></span>
+                                        <span>Mumbai: <strong id="widget-polish-mumbai">0</strong></span>
+                                        <span>Vendor: <strong id="widget-polish-vendor">0</strong></span>
+                                    </div>
+                                </div>
+                                <hr style="border: 0; border-top: 1px dashed var(--color-border-light); margin: 0;">
+                                <!-- Box Stock -->
+                                <div class="stock-item">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-weight: 600;">
+                                        <span>🔷 Box/Dabbi Stock</span>
+                                        <span id="widget-box-stock" style="color: #0891b2; font-weight: 700;">0 boxes</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--color-text-muted);">
+                                        <span>Surat: <strong id="widget-box-surat">0</strong></span>
+                                        <span>Mumbai: <strong id="widget-box-mumbai">0</strong></span>
+                                        <span>Vendor: <strong id="widget-box-vendor">0</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity Feed Widget -->
+                        <div class="card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border-light); padding-bottom: 4px; margin-bottom: 8px;">
+                                <h3 style="font-size: 12px; font-weight: 600; color: var(--color-primary-dark); margin: 0; display: flex; align-items: center; gap: 6px;">
+                                    🕒 Recent Activity Feed
+                                </h3>
+                                <button class="btn btn-secondary btn-compact" onclick="window.location.href='records.html'">All Records</button>
+                            </div>
+                            <div id="activity-feed-list" style="display: flex; flex-direction: column; gap: 4px; max-height: 150px; overflow-y: auto; padding-right: 4px;">
+                                <!-- Populated dynamically by JS -->
+                                <div class="empty-state" style="padding: 10px; font-size: 11px;">No recent activities.</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Payment Management Panel (Outstanding Receipts and Payments) -->
+                    <div class="payment-management-panel" style="display: flex; flex-direction: column; gap: 10px;">
+                        
+                        <!-- Search & Filter for Payments -->
+                        <div class="filter-panel">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="payments-search-input" placeholder="Search by Party or Ref No..." oninput="filterPayments()">
+                            </div>
+                            <div style="font-size: 12px; font-weight: 500; color: var(--color-text-muted);">
+                                Showing pending outstanding balances only
+                            </div>
+                        </div>
+
+                        <!-- 1. Receivables Section (Customer Invoices) -->
+                        <div class="card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--color-warning-bg); padding-bottom: 4px; margin-bottom: 8px;">
+                                <h3 style="font-size: 12px; font-weight: 700; color: var(--color-warning); margin: 0; display: flex; align-items: center; gap: 6px;">
+                                    ⏳ Pending Receivables (Customer Payments to Receive)
+                                </h3>
+                                <span class="badge badge-warning" id="receivables-summary">₹0.00 (0 Invoices)</span>
+                            </div>
+                            <div class="table-container">
+                                <table class="erp-table" id="receivables-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ref No</th>
+                                            <th>Module</th>
+                                            <th>Customer Party</th>
+                                            <th>Dalal</th>
+                                            <th class="text-right">Weight (ct)</th>
+                                            <th class="text-right">Final Value</th>
+                                            <th class="text-right">Total Paid</th>
+                                            <th class="text-right">Outstanding</th>
+                                            <th>Deadline</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="receivables-table-body">
+                                        <!-- Dynamic pending sales -->
+                                    </tbody>
+                                </table>
+                                <div id="receivables-empty-state" class="empty-state hidden">
+                                    <div class="empty-icon">🎉</div>
+                                    <h3>No pending receivables!</h3>
+                                    <p>All customers have paid their invoices.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Payables Section (Supplier Invoices) -->
+                        <div class="card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--color-danger-bg); padding-bottom: 4px; margin-bottom: 8px;">
+                                <h3 style="font-size: 12px; font-weight: 700; color: var(--color-danger); margin: 0; display: flex; align-items: center; gap: 6px;">
+                                    💸 Pending Payables (Supplier Payments We Owe)
+                                </h3>
+                                <span class="badge badge-danger" id="payables-summary">₹0.00 (0 Invoices)</span>
+                            </div>
+                            <div class="table-container">
+                                <table class="erp-table" id="payables-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ref No</th>
+                                            <th>Module</th>
+                                            <th>Supplier Party</th>
+                                            <th>Dalal</th>
+                                            <th class="text-right">Weight (ct)</th>
+                                            <th class="text-right">Final Value</th>
+                                            <th class="text-right">Total Paid</th>
+                                            <th class="text-right">Outstanding We Owe</th>
+                                            <th>Deadline</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="payables-table-body">
+                                        <!-- Dynamic pending buys -->
+                                    </tbody>
+                                </table>
+                                <div id="payables-empty-state" class="empty-state hidden">
+                                    <div class="empty-icon">🎉</div>
+                                    <h3>No pending payables!</h3>
+                                    <p>All supplier bills have been paid in full.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="js/shared.js"></script>
+    <script src="js/dashboard.js"></script>
+    <!-- Polish module data is loaded by dashboard.js -->
+</body>
+</html>
+

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Transfer Management</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+    <div class="erp-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="erp-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">💎</span>
+                <span class="brand-text">RV GEMS ERP</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item active" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Administrator</span>
+                        <span class="user-role">Billing Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="erp-main">
+            <header class="erp-header">
+                <div class="header-left">
+                    <h1 id="page-title">Transfer Management</h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" onclick="window.location.href='index.html'">Dashboard</button>
+                </div>
+            </header>
+
+            <main class="erp-content">
+                <div class="form-grid">
+                    
+                    <!-- NEW TRANSFER FORM -->
+                    <div class="form-section full-width">
+                        <h3 class="section-title">New Inventory Transfer</h3>
+                        <form id="transfer-form" onsubmit="saveTransferEntry(event)" autocomplete="off">
+                            <div class="form-group-row">
+                                <div class="form-control">
+                                    <label for="transfer-no">Transfer Number</label>
+                                    <input type="text" id="transfer-no" readonly class="readonly-input" placeholder="TR-XXX">
+                                </div>
+                                <div class="form-control">
+                                    <label for="transfer-date">Transfer Date <span class="required">*</span></label>
+                                    <input type="date" id="transfer-date" required>
+                                </div>
+                                <div class="form-control">
+                                    <label for="from-location">From Location <span class="required">*</span></label>
+                                    <select id="from-location" required onchange="handleLocationChange()">
+                                        <option value="Surat">Surat</option>
+                                        <option value="Mumbai">Mumbai</option>
+                                    </select>
+                                </div>
+                                <div class="form-control">
+                                    <label for="to-location">To Location</label>
+                                    <input type="text" id="to-location" readonly class="readonly-input" value="Mumbai">
+                                </div>
+                            </div>
+
+                            <div class="form-group-row">
+                                <div class="form-control max-w-180">
+                                    <label for="item-type">Item Type <span class="required">*</span></label>
+                                    <select id="item-type" required onchange="handleItemTypeChange()">
+                                        <option value="Polish">Polish Diamond</option>
+                                        <option value="Dabbi">Dabbi (Box)</option>
+                                    </select>
+                                </div>
+                                <div class="form-control flex-2">
+                                    <label for="transfer-remarks">Remarks</label>
+                                    <input type="text" id="transfer-remarks" placeholder="Optional comments on transfer">
+                                </div>
+                            </div>
+
+                            <!-- DYNAMIC ITEM SELECTION AREAS -->
+                            <div class="form-section form-sub-section" id="polish-selection-area">
+                                <h4 class="form-sub-title">Polish Lot Selection</h4>
+                                <div class="form-group-row">
+                                    <div class="form-control flex-2">
+                                        <label for="polish-lot-id">Select Polish Lot <span class="required">*</span></label>
+                                        <select id="polish-lot-id" onchange="handlePolishLotChange()">
+                                            <!-- Dynamically populated -->
+                                        </select>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="polish-quantity">Quantity to Transfer <span class="required">*</span></label>
+                                        <input type="number" id="polish-quantity" min="1" placeholder="e.g. 5">
+                                        <span class="field-hint" id="polish-avail-hint">Available: 0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section form-sub-section hidden" id="dabbi-selection-area">
+                                <h4 class="form-sub-title">Dabbi Box Selection</h4>
+                                <div class="form-control">
+                                    <label for="dabbi-search">Select Boxes to Transfer <span class="required">*</span></label>
+                                    <input type="text" id="dabbi-search" placeholder="🔍 Search boxes by ID, shape, size..." class="rec-search mb-sm w-full" oninput="filterDabbiList()">
+                                    <div class="item-list-box" id="dabbi-list-container">
+                                        <!-- Dynamically populated checkboxes -->
+                                    </div>
+                                    <span class="field-hint" id="dabbi-count-hint">Selected: 0 boxes</span>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">🔄 Execute Transfer</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- TRANSFER RECORDS LOG -->
+                    <div class="form-section full-width mt-md">
+                        <h3 class="section-title">Transfer History Log</h3>
+                        <div class="table-responsive">
+                            <table class="ledger-table w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Transfer No</th>
+                                        <th>Type</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Details</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transfer-log-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                            <div id="transfers-empty-state" class="empty-state hidden">
+                                <div class="empty-icon">📦</div>
+                                <h3>No transfers recorded</h3>
+                                <p>Use the form above to log your first inventory transfer.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/shared.js"></script>
+    <script src="js/transfer_management.js"></script>
+</body>
+</html>
+

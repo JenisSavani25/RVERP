@@ -1,0 +1,1 @@
+I will modify the script to search for any JSON line in `transcript.jsonl` containing `CREATE TABLE` and output the first 500 characters of each to see if we can find the complete schema definition.

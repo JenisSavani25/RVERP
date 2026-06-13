@@ -1,0 +1,106 @@
+<USER_REQUEST>
+Connect the existing RV Gems ERP to PostgreSQL using ASP.NET Core (.NET Web API) as the backend. Perform a direct 1:1 migration from LocalStorage to PostgreSQL without changing any business logic, calculations, workflows, validations, inventory rules, UI layout, field names, or user flow. Preserve all existing functionality exactly as implemented. Replace only the data persistence layer by creating APIs that mirror the current LocalStorage operations and connect them to the PostgreSQL database using Entity Framework Core. The objective is functional parity, not redesign or optimization.
+
+
+and consider data abse schema as per you have given before 
+-- 1. Users table (Must be created first for FK references)
+CREATE TABLE Users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'Billing Manager',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. PartyMaster table
+CREATE TABLE PartyMaster (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    city VARCHAR(50),
+    mobile VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. VendorMaster table (Must be created before transaction tables for dalal_id reference)
+CREATE TABLE VendorMaster (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    vendor_type VARCHAR(20) DEFAULT 'Dalal',
+    city VARCHAR(50),
+    mobile VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Rough Buys (Using dalal_id and created_by)
+CREATE TABLE RoughBuys (
+    id SERIAL PRIMARY KEY,
+    buying_no INT NOT NULL UNIQUE,
+    buying_date DATE NOT NULL,
+    party_id INT NOT NULL REFERENCES PartyMaster(id),
+    dalal_id INT REFERENCES VendorMaster(id), -- Changed from VARCHAR to FK
+    currency_type VARCHAR(10) CHECK (currency_type IN ('Rupees', 'Dollar')),
+    total_dollar 
+<truncated 7789 bytes>
+  box_id VARCHAR(50) NOT NULL REFERENCES Boxes(box_id),
+    carat NUMERIC(10, 3) NOT NULL,
+    m_price INT NOT NULL,
+    m_value INT NOT NULL
+);
+
+-- 14. Transfers Records
+CREATE TABLE Transfers (
+    id SERIAL PRIMARY KEY,
+    transfer_no VARCHAR(50) UNIQUE NOT NULL,
+    date DATE NOT NULL,
+    item_type VARCHAR(15) CHECK (item_type IN ('Polish', 'Dabbi')),
+    from_location VARCHAR(20) CHECK (from_location IN ('Surat', 'Mumbai')),
+    to_location VARCHAR(20) CHECK (to_location IN ('Surat', 'Mumbai')),
+    remarks VARCHAR(255),
+    created_by INT REFERENCES Users(id), -- Audit reference
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 15. Transfer Items
+CREATE TABLE TransferItems (
+    id SERIAL PRIMARY KEY,
+    transfer_id INT NOT NULL REFERENCES Transfers(id),
+    polish_lot_id VARCHAR(50) REFERENCES PolishLots(lot_id),
+    quantity INT,
+    box_id VARCHAR(50) REFERENCES Boxes(box_id)
+);
+
+-- 16. Vendor Issue Items
+CREATE TABLE VendorIssueItems (
+    id SERIAL PRIMARY KEY,
+    issue_id INT NOT NULL REFERENCES VendorIssues(id),
+    item_type VARCHAR(15) CHECK (item_type IN ('Polish', 'Dabbi')),
+    polish_lot_id VARCHAR(50) REFERENCES PolishLots(lot_id),
+    quantity INT,
+    box_id VARCHAR(50) REFERENCES Boxes(box_id)
+);
+
+-- 17. Payments Transactions (Installment ledger logs)
+CREATE TABLE Payments (
+    id SERIAL PRIMARY KEY,
+    payment_date DATE NOT NULL,
+    payment_type VARCHAR(10) CHECK (payment_type IN ('Bill', 'Cash', 'Dalali')),
+    amount INT NOT NULL,
+    remarks VARCHAR(255),
+    rough_buy_id INT REFERENCES RoughBuys(id),
+    rough_sale_id INT REFERENCES RoughSales(id),
+    polish_sale_id INT REFERENCES PolishSales(id),
+    box_sale_id INT REFERENCES BoxSales(id),
+    created_by INT REFERENCES Users(id), -- Audit reference
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-06-11T21:04:47+05:30.
+</ADDITIONAL_METADATA>

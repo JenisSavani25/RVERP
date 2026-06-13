@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Box Making Entry</title>
+    <meta name="description" content="Box (Dabbi) Making entry form for RV Gems ERP — record polished diamond classifications and market valuations.">
+    <!-- Google Fonts: Inter for professional enterprise typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+    <!-- Main ERP Container -->
+    <div class="erp-container">
+        
+        <!-- Sidebar Navigation (Fixed) -->
+        <aside class="erp-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">💎</span>
+                <span class="brand-text">RV GEMS ERP</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item active" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Administrator</span>
+                        <span class="user-role">Billing Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="erp-main">
+            <!-- Top Navigation / Header -->
+            <header class="erp-header">
+                <div class="header-left">
+                    <h1 id="page-title">Box Making Entry</h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+                         Dashboard
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Container -->
+            <main class="erp-content">
+                
+                <!-- MODULE: BOX MAKING ENTRY FORM -->
+                <section id="view-box-making" class="content-module active-view">
+                    <form id="box-form" onsubmit="saveBoxEntry(event)" autocomplete="off">
+                        <div class="form-grid">
+
+                            <!-- SECTION 1: IDENTIFICATION & DESCRIPTION -->
+                            <div class="form-section full-width">
+                                <h3 class="section-title">Identification & Stone Description</h3>
+                                <div class="form-section-note">
+                                    <span>ℹ️</span>
+                                    <span>Enter the unique ID, physical shape, colour grade, clarity grade and measurements for this diamond entry.</span>
+                                </div>
+                                <div class="form-group-row">
+                                    <!-- ID.NO — character prefix + sequential number -->
+                                    <div class="form-control">
+                                        <label>ID No <span class="required">*</span></label>
+                                        <div class="id-compound-wrap">
+                                            <select id="id-char" class="id-char-select" onchange="updateIdPreview()">
+                                                <option value="A">A</option>
+                                                <option value="B">B</option>
+                                                <option value="C">C</option>
+                                                <option value="D">D</option>
+                                                <option value="E">E</option>
+                                                <option value="F" selected>F</option>
+                                                <option value="G">G</option>
+                                                <option value="H">H</option>
+                                                <option value="I">I</option>
+                                                <option value="J">J</option>
+                                                <option value="K">K</option>
+                                                <option value="L">L</option>
+                                                <option value="M">M</option>
+                                                <option value="N">N</option>
+                                                <option value="O">O</option>
+                                                <option value="P">P</option>
+                                                <option value="Q">Q</option>
+                                                <option value="R">R</option>
+                                                <option value="S">S</option>
+                                                <option value="T">T</option>
+                                                <option value="U">U</option>
+                                                <option value="V">V</option>
+                                                <option value="W">W</option>
+                                                <option value="X">X</option>
+                                                <option value="Y">Y</option>
+                                                <option value="Z">Z</option>
+                                            </select>
+                                            <span class="id-dash-sep">—</span>
+                                            <input type="number" id="id-num" class="id-num-input" min="1" step="1" placeholder="374" oninput="updateIdPreview()">
+                                        </div>
+                                        <span class="field-hint" id="id-preview-display">F — ___</span>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label for="shape1">Shape 1 <span class="required">*</span></label>
+                                        <input type="text" id="shape1" placeholder="e.g. SHIELD, ROUND, OVAL" oninput="updatePreviewBar()">
+                                        <span class="field-hint">Diamond shape name</span>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label for="color">Color <span class="required">*</span></label>
+                                        <input type="text" id="color" placeholder="e.g. G+, D, F-G" oninput="updatePreviewBar()">
+                                        <span class="field-hint">Colour grade</span>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label for="purity">Purity <span class="required">*</span></label>
+                                        <input type="text" id="purity" placeholder="e.g. VVS-VS, VS1, SI" oninput="updatePreviewBar()">
+                                        <span class="field-hint">Clarity / purity grade</span>
+                                    </div>
+                                </div>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="mm">MM (Measurements) <span class="required">*</span></label>
+                                        <input type="text" id="mm" placeholder="e.g. 510X435, 4.5X3.2" oninput="updatePreviewBar()">
+                                        <span class="field-hint">Length × Width dimensions</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECTION 2: SHAPE CLASSIFICATION & MARKET VALUATION -->
+                            <div class="form-section" id="valuation-section">
+                                <h3 class="section-title">Shape 2 Classification & Market Valuation</h3>
+                                <div class="form-section-note">
+                                    <span>📊</span>
+                                    <span>Select the cut type (Shape 2) and enter the carat weight — M.Price and M.Value are auto-calculated from the price table.</span>
+                                </div>
+
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="shape2">Shape 2 (Cut Type) <span class="required">*</span></label>
+                                        <select id="shape2" onchange="calculateBoxValues(); updatePreviewBar()">
+                                            <option value="">— Select Cut Type —</option>
+                                            <option value="P_2">P_2 &nbsp; (2-Pointer)</option>
+                                            <option value="R_9P">R_9P &nbsp; (9-Pointer Round)</option>
+                                            <option value="R_4P">R_4P &nbsp; (4-Pointer Round)</option>
+                                            <option value="EM">EM &nbsp; (Emerald)</option>
+                                            <option value="HEART">HEART &nbsp; (Heart)</option>
+                                            <option value="AS">AS &nbsp; (Asscher / Square)</option>
+                                            <option value="CROSS">CROSS &nbsp; (Cross)</option>
+                                        </select>
+                                        <span class="field-hint">Determines the M.Price rate table</span>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label for="carat">Carat Weight <span class="required">*</span></label>
+                                        <input type="number" id="carat" min="0.001" step="0.001" placeholder="e.g. 0.600" oninput="calculateBoxValues(); updatePreviewBar()">
+                                        <span class="field-hint">Diamond weight in carats</span>
+                                    </div>
+                                </div>
+
+                                <!-- Price Bracket Lookup Result -->
+                                <div class="price-bracket-card hidden" id="price-bracket-card">
+                                    <span class="bracket-icon">✅</span>
+                                    <span id="price-bracket-text">Price looked up successfully.</span>
+                                </div>
+
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="m-price">M.Price (₹/ct — Rate from Table)</label>
+                                        <input type="text" id="m-price" readonly class="readonly-input mprice-input" value="₹0">
+                                        <span class="field-hint">Auto-calculated from Shape 2 + Carat table</span>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="m-value">M.Value (M.Price × Carat) (₹)</label>
+                                        <input type="text" id="m-value" readonly class="readonly-input mvalue-input" value="₹0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ENTRY PREVIEW BAR (full width) -->
+                            <div class="form-section full-width">
+                                <h3 class="section-title">Live Entry Preview</h3>
+                                <div class="entry-preview-bar" id="entry-preview-bar">
+                                    <span class="preview-label">Preview</span>
+                                    <span class="preview-chip highlight" id="prev-id">F-___</span>
+                                    <span class="preview-chip" id="prev-shape1">SHAPE1</span>
+                                    <span class="preview-chip" id="prev-color">COLOR</span>
+                                    <span class="preview-chip" id="prev-purity">PURITY</span>
+                                    <span class="preview-chip" id="prev-mm">MM</span>
+                                    <span class="preview-chip" id="prev-shape2">SHAPE2</span>
+                                    <span class="preview-chip" id="prev-carat">0.000 ct</span>
+                                    <span class="preview-chip" id="prev-mprice">₹0/ct</span>
+                                    <span class="preview-chip highlight" id="prev-mvalue">₹0</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='index.html'">Cancel</button>
+                            <button type="submit" class="btn btn-primary">💾 Save Box Entry</button>
+                        </div>
+                    </form>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="js/shared.js"></script>
+    <script src="js/box_making.js"></script>
+</body>
+</html>
+

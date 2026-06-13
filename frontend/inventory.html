@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Inventory Management</title>
+    <meta name="description" content="Live inventory tracking for RV Gems — Rough diamonds, Polish diamonds, and Box (Dabbi) stock with full movement ledger.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+<div class="erp-container">
+
+    <!-- Sidebar -->
+    <aside class="erp-sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">💎</span>
+            <span class="brand-text">RV GEMS ERP</span>
+        </div>
+        <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item active" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <div class="user-info">
+                    <span class="user-name">Administrator</span>
+                    <span class="user-role">Inventory Manager</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="erp-main">
+        <header class="erp-header">
+            <div class="header-left">
+                <h1 id="page-title">Inventory Management</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" onclick="window.location.href='index.html'"> Dashboard</button>
+            </div>
+        </header>
+
+        <main class="erp-content">
+
+            <!-- ── STOCK SUMMARY CARDS ── -->
+            <section style="margin-bottom: 8px;">
+                <div class="inventory-grid">
+
+                    <!-- ROUGH STOCK -->
+                    <div class="stock-card rough">
+                        <span class="stock-status-pill" id="rough-pill">LOADING</span>
+                        <span class="card-icon">💎</span>
+                        <div class="card-type">Rough Diamond Stock</div>
+                        <div class="card-count" id="rough-stock-count">0</div>
+                        <div class="card-unit">diamonds</div>
+                        <div class="card-stats">
+                            <div class="stock-stat">
+                                <span class="stat-label">Bought In</span>
+                                <span class="stat-val plus" id="rough-in">+0</span>
+                            </div>
+                            <div class="stock-stat">
+                                <span class="stat-label">Sold Out</span>
+                                <span class="stat-val minus" id="rough-sold">−0</span>
+                            </div>
+                            <div class="stock-stat">
+                                <span class="stat-label">Converted</span>
+                                <span class="stat-val minus" id="rough-conv">−0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- POLISH STOCK -->
+                    <div class="stock-card polish">
+                        <span class="stock-status-pill" id="polish-pill">LOADING</span>
+                        <span class="card-icon">✨</span>
+                        <div class="card-type">Polish Diamond Stock</div>
+                        <div class="card-count" id="polish-stock-count">0</div>
+                        <div class="card-unit">diamonds</div>
+                        <div class="card-stats">
+                            <div class="stock-stat">
+                                <span class="stat-label">Bought</span>
+                                <span class="stat-val plus" id="polish-bought">+0</span>
+                            </div>
+                            <div class="stock-stat">
+                                <span class="stat-label">From Conv.</span>
+                                <span class="stat-val plus" id="polish-conv">+0</span>
+                            </div>
+                            <div class="stock-stat">
+                                <span class="stat-label">Sold</span>
+                                <span class="stat-val minus" id="polish-sold">−0</span>
+                            </div>
+                            <div class="stock-stat">
+                                <span class="stat-label">Used in Box</span>
+                                <span class="stat-val minus" id="polish-box">−0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOX STOCK -->
+                    <div class="stock-card box">
+                        <span class="stock-status-pill" id="box-pill">LOADING</span>
+                        <span class="card-icon">🔷</span>
+                        <div class="card-type">Box (Dabbi) Stock</div>
+                        <div class="card-count" id="box-stock-count">0</div>
+                        <div class="card-unit">boxes</div>
+                        <div class="card-stats">
+                            <div class="stock-stat">
+                                <span class="stat-label">Made</span>
+                                <span class="stat-val plus" id="box-made">+0</span>
+                            </div>
+                            <div class="stock-stat">
+                                <span class="stat-label">Sold</span>
+                                <span class="stat-val minus" id="box-sold">−0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── HISTORY & SUMMARY SECTION ── -->
+            <section class="history-section">
+                <div class="history-section-head">
+                    <h3>📊 Historical Summary & All-Time Totals</h3>
+                    <span id="history-last-updated">—</span>
+                </div>
+
+                <div class="hist-cat-grid">
+
+                    <!-- ROUGH DIAMONDS HISTORY -->
+                    <div class="hist-cat">
+                        <div class="hist-cat-label rough">💎 Rough Diamonds</div>
+
+                        <div class="hist-row">
+                            <span class="hist-row-label">Total Purchased (Buys)</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs plus"   id="h-rough-in-pcs">0</span>
+                                <span class="hist-ct"         id="h-rough-in-ct">0.000 ct</span>
+                                <span class="hist-amt"        id="h-rough-in-amt">₹0</span>
+                            </div>
+                        </div>
+                        <div class="hist-row">
+                            <span class="hist-row-label">Total Sold</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs minus"  id="h-rough-sold-pcs">0</span>
+                                <span class="hist-ct"         id="h-rough-sold-ct">0.000 ct</span>
+                                <span class="hist-amt"        id="h-rough-sold-amt">₹0</span>
+                            </div>
+                        </div>
+                        <div class="hist-row">
+                            <span class="hist-row-label">Total Converted to Polish</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs minus"  id="h-rough-conv-pcs">0</span>
+                                <span class="hist-ct">—</span>
+                                <span class="hist-amt">—</span>
+                            </div>
+                        </div>
+                        <div class="hist-row total-row">
+                            <span class="hist-row-label">Current Stock</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs neutral" id="h-rough-stock">0</span>
+                                <span class="hist-ct"          id="h-rough-stock-ct">0.000 ct</span>
+                                <span class="hist-amt">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- POLISH DIAMONDS HISTORY -->
+                    <div class="hist-cat">
+                        <div class="hist-cat-label polish">✨ Polish Diamonds</div>
+
+                        <div class="hist-row">
+                            <span class="hist-row-label">Purchased (Polish Buys)</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs plus"   id="h-polish-bought-pcs">0</span>
+                                <span class="hist-ct"         id="h-polish-bought-ct">0.000 ct</span>
+                                <span class="hist-amt"        id="h-polish-bought-amt">₹0</span>
+                            </div>
+                        </div>
+                        <div class="hist-row">
+                            <span class="hist-row-label">Received via Conversion</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs plus"   id="h-polish-conv-pcs">0</span>
+                                <span class="hist-ct">—</span>
+                                <span class="hist-amt">—</span>
+                            </div>
+                        </div>
+                        <div class="hist-row">
+                            <span class="hist-row-label">Total Sold</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs minus"  id="h-polish-sold-pcs">0</span>
+                                <span class="hist-ct"         id="h-polish-sold-ct">0.000 ct</span>
+                                <span class="hist-amt"        id="h-polish-sold-amt">₹0</span>
+                            </div>
+                        </div>
+                        <div class="hist-row">
+                            <span class="hist-row-label">Used in Box Making (×2)</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs minus"  id="h-polish-box-pcs">0</span>
+                                <span class="hist-ct">—</span>
+                                <span class="hist-amt">—</span>
+                            </div>
+                        </div>
+                        <div class="hist-row total-row">
+                            <span class="hist-row-label">Current Stock</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs neutral" id="h-polish-stock">0</span>
+                                <span class="hist-ct">—</span>
+                                <span class="hist-amt">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOX (DABBI) HISTORY -->
+                    <div class="hist-cat">
+                        <div class="hist-cat-label box">🔷 Box (Dabbi)</div>
+
+                        <div class="hist-row">
+                            <span class="hist-row-label">Total Boxes Made</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs plus"   id="h-box-made">0</span>
+                                <span class="hist-ct"         id="h-box-made-ct">0.000 ct</span>
+                                <span class="hist-amt"        id="h-box-made-mval">₹0</span>
+                            </div>
+                        </div>
+                        <div class="hist-row">
+                            <span class="hist-row-label">Total Boxes Sold</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs minus"  id="h-box-sold">0</span>
+                                <span class="hist-ct">—</span>
+                                <span class="hist-amt"        id="h-box-sold-amt">₹0</span>
+                            </div>
+                        </div>
+                        <div class="hist-row total-row">
+                            <span class="hist-row-label">Boxes in Stock</span>
+                            <div class="hist-row-val">
+                                <span class="hist-pcs neutral" id="h-box-stock">0</span>
+                                <span class="hist-ct"          id="h-box-stock-ct">0.000 ct</span>
+                                <span class="hist-amt">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction Count Strip -->
+                <div class="txn-count-strip">
+                    <div class="txn-chip">
+                        <span class="txn-chip-label">Rough Buys</span>
+                        <span class="txn-chip-count" id="tc-rough-buy">0</span>
+                        <span class="txn-chip-sub">transactions</span>
+                    </div>
+                    <div class="txn-chip">
+                        <span class="txn-chip-label">Rough Sales</span>
+                        <span class="txn-chip-count" id="tc-rough-sale">0</span>
+                        <span class="txn-chip-sub">transactions</span>
+                    </div>
+                    <div class="txn-chip">
+                        <span class="txn-chip-label">Conversions</span>
+                        <span class="txn-chip-count" id="tc-conv">0</span>
+                        <span class="txn-chip-sub">batches</span>
+                    </div>
+                    <div class="txn-chip">
+                        <span class="txn-chip-label">Polish Buys</span>
+                        <span class="txn-chip-count" id="tc-polish-buy">0</span>
+                        <span class="txn-chip-sub">transactions</span>
+                    </div>
+                    <div class="txn-chip">
+                        <span class="txn-chip-label">Polish Sales</span>
+                        <span class="txn-chip-count" id="tc-polish-sale">0</span>
+                        <span class="txn-chip-sub">transactions</span>
+                    </div>
+                    <div class="txn-chip">
+                        <span class="txn-chip-label">Boxes Made</span>
+                        <span class="txn-chip-count" id="tc-box-make">0</span>
+                        <span class="txn-chip-sub">entries</span>
+                    </div>
+                    <div class="txn-chip">
+                        <span class="txn-chip-label">Boxes Sold</span>
+                        <span class="txn-chip-count" id="tc-box-sell">0</span>
+                        <span class="txn-chip-sub">transactions</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── ROUGH → POLISH CONVERSION FORM ── -->
+            <div class="conv-card">
+                <div class="conv-card-header">
+                    <div class="conv-card-title">
+                        <span>🔄</span>
+                        <span>Rough → Polish Conversion Entry</span>
+                        <span class="badge">STOCK ADJUSTMENT</span>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="conv-toggle-btn" onclick="toggleConvForm()">
+                        + New Conversion
+                    </button>
+                </div>
+
+                <!-- Conversion Form (hidden by default) -->
+                <div id="conv-form-wrap" class="hidden">
+                    <form id="conv-form" onsubmit="saveConversion(event)" autocomplete="off">
+                        <div class="form-grid" style="margin-top: 0;">
+                            <div class="form-section full-width" style="border:none; padding: 0; box-shadow: none; margin-bottom: 0;">
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="conv-date">Conversion Date <span class="required">*</span></label>
+                                        <input type="date" id="conv-date" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="conv-rough">Rough Diamonds Sent <span class="required">*</span></label>
+                                        <input type="number" id="conv-rough" min="1" step="1" placeholder="e.g. 10" required oninput="validateConvRough()">
+                                        <span class="field-hint">Deducted from Rough Stock</span>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="conv-polish">Polish Diamonds Received <span class="required">*</span></label>
+                                        <input type="number" id="conv-polish" min="1" step="1" placeholder="e.g. 8" required oninput="validateConvPolish()">
+                                        <span class="field-hint">Added to Polish Stock (≤ Rough sent)</span>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="conv-remarks">Batch / Remarks</label>
+                                        <input type="text" id="conv-remarks" placeholder="e.g. Batch 1 — SHIELD cut">
+                                    </div>
+                                </div>
+                                <div id="conv-warning" class="hidden" style="margin-top:8px; background:#fef3c7; border:1.5px solid #f59e0b; border-radius:8px; padding:10px 14px; font-size:12px; font-weight:600; color:#92400e;"></div>
+                            </div>
+                        </div>
+                        <div class="form-actions" style="margin-top: 16px;">
+                            <button type="button" class="btn btn-secondary" onclick="toggleConvForm()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">🔄 Save Conversion</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Past conversions mini-table -->
+                <div id="conv-history-wrap">
+                    <table class="ledger-table" style="margin-top:0;" id="conv-history-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Rough Sent</th>
+                                <th>Polish Received</th>
+                                <th>Wastage</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="conv-history-body">
+                            <!-- filled by JS -->
+                        </tbody>
+                    </table>
+                    <div id="conv-empty" class="empty-ledger hidden">
+                        <div class="empty-icon">🔄</div>
+                        <div>No conversion entries yet. Use the button above to record rough → polish conversions.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── FULL MOVEMENT LEDGER ── -->
+            <div class="ledger-table-wrap">
+                <div class="ledger-header">
+                    <h3>📋 Full Inventory Movement Ledger</h3>
+                    <span style="font-size:12px; color:#64748b;" id="ledger-count">0 movements</span>
+                </div>
+
+                <!-- Filter bar -->
+                <div class="filter-bar">
+                    <button class="filter-btn active" data-filter="all"        onclick="applyFilter('all',this)">All</button>
+                    <button class="filter-btn"        data-filter="rough-buy"  onclick="applyFilter('rough-buy',this)">💎 Rough Buy</button>
+                    <button class="filter-btn"        data-filter="rough-sale" onclick="applyFilter('rough-sale',this)">Rough Sale</button>
+                    <button class="filter-btn"        data-filter="conversion" onclick="applyFilter('conversion',this)">🔄 Conversion</button>
+                    <button class="filter-btn"        data-filter="polish-buy" onclick="applyFilter('polish-buy',this)">✨ Polish Buy</button>
+                    <button class="filter-btn"        data-filter="polish-sale"onclick="applyFilter('polish-sale',this)">Polish Sale</button>
+                    <button class="filter-btn"        data-filter="box-make"   onclick="applyFilter('box-make',this)">🔷 Box Making</button>
+                    <button class="filter-btn"        data-filter="box-sell"   onclick="applyFilter('box-sell',this)">Box Selling</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="ledger-table" id="movement-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Reference / Description</th>
+                                <th>Party</th>
+                                <th class="text-center">Rough Δ</th>
+                                <th class="text-center">Polish Δ</th>
+                                <th class="text-center">Box Δ</th>
+                                <th class="text-right">Rough Total</th>
+                                <th class="text-right">Polish Total</th>
+                                <th class="text-right">Box Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movement-body">
+                            <!-- filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="ledger-empty" class="empty-ledger hidden">
+                    <div class="empty-icon">📋</div>
+                    <div>No inventory movements yet. Start by adding Rough Buy entries.</div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="js/shared.js"></script>
+<script src="js/inventory.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,212 @@
+CREATE TABLE TransferItems (
+    id SERIAL PRIMARY KEY,
+    transfer_id INT NOT NULL REFERENCES Transfers(id),
+    polish_lot_id VARCHAR(50) REFERENCES PolishLots(lot_id), -- Null if Dabbi
+    quantity INT,                                            -- Null if Dabbi
+    box_id VARCHAR(50) REFERENCES Boxes(box_id)              -- Null if Polish
+);
+
+CREATE TABLE VendorIssueItems (
+    id SERIAL PRIMARY KEY,
+    issue_id INT NOT NULL REFERENCES VendorIssues(id),
+    item_type VARCHAR(15) CHECK (item_type IN ('Polish', 'Dabbi')),
+    polish_lot_id VARCHAR(50) REFERENCES PolishLots(lot_id), -- Null if Dabbi
+    quantity INT,                                            -- Null if Dabbi
+    box_id VARCHAR(50) REFERENCES Boxes(box_id)              -- Null if Polish
+);
+
+CREATE TABLE Payments (
+    id SERIAL PRIMARY KEY,
+    payment_date DATE NOT NULL,
+    payment_type VARCHAR(10) CHECK (payment_type IN ('Bill', 'Cash', 'Dalali')),
+    amount INT NOT NULL,
+    remarks VARCHAR(255),
+    rough_buy_id INT REFERENCES RoughBuys(id),
+    rough_sale_id INT REFERENCES RoughSales(id),
+    polish_sale_id INT REFERENCES PolishSales(id),
+    box_sale_id INT REFERENCES BoxSales(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'Billing Manager',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE PartyMaster (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    city VARCHAR(50),
+    mobile VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Transfers (
+    id SERIAL PRIMARY KEY,
+    transfer_no VARCHAR(50) UNIQUE NOT NULL,
+    date DATE NOT NULL,
+    item_type VARCHAR(15) CHECK (item_type IN ('Polish', 'Dabbi')),
+    from_location VARCHAR(20) CHECK (from_location IN ('Surat', 'Mumbai')),
+    to_location VARCHAR(20) CHECK (to_location IN ('Surat', 'Mumbai')),
+    remarks VARCHAR(255),
+    created_by INT REFERENCES Users(id), -- Audit reference
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE TransferItems (
+    id SERIAL PRIMARY KEY,
+    transfer_id INT NOT NULL REFERENCES Transfers(id),
+    polish_lot_id VARCHAR(50) REFERENCES PolishLots(lot_id),
+    quantity INT,
+    box_id VARCHAR(50) REFERENCES Boxes(box_id)
+);
+
+CREATE TABLE VendorIssueItems (
+    id SERIAL PRIMARY KEY,
+    issue_id INT NOT NULL REFERENCES VendorIssues(id),
+    item_type VARCHAR(15) CHECK (item_type IN ('Polish', 'Dabbi')),
+    polish_lot_id VARCHAR(50) REFERENCES PolishLots(lot_id),
+    quantity INT,
+    box_id VARCHAR(50) REFERENCES Boxes(box_id)
+);
+
+CREATE TABLE Payments (
+    id SERIAL PRIMARY KEY,
+    payment_date DATE NOT NULL,
+    payment_type VARCHAR(10) CHECK (payment_type IN ('Bill', 'Cash', 'Dalali')),
+    amount INT NOT NULL,
+    remarks VARCHAR(255),
+    rough_buy_id INT REFERENCES RoughBuys(id),
+    rough_sale_id INT REFERENCES RoughSales(id),
+    polish_sale_id INT REFERENCES PolishSales(id),
+    box_sale_id INT REFERENCES BoxSales(id),
+    created_by INT REFERENCES Users(id), -- Audit reference
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE VendorMaster (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    vendor_type VARCHAR(20) DEFAULT 'Dalal',
+    city VARCHAR(50),
+    mobile VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE RoughBuys (
+    id SERIAL PRIMARY KEY,
+    buying_no INT NOT NULL UNIQUE,
+    buying_date DATE NOT NULL,
+    party_id INT NOT NULL REFERENCES PartyMaster(id),
+    dalal_id INT REFERENCES VendorMaster(id), -- Changed from VARCHAR to FK
+    currency_type VARCHAR(10) CHECK (currency_type IN ('Rupees', 'Dollar')),
+    total_dollar
+<truncated 7788 bytes>
+    box_id VARCHAR(50) NOT NULL REFERENCES Boxes(box_id),
+    carat NUMERIC(10, 3) NOT NULL,
+    m_price INT NOT NULL,
+    m_value INT NOT NULL
+);
+
+CREATE TABLE RoughBuys (
+    id SERIAL PRIMARY KEY,
+    buying_no INT NOT NULL UNIQUE,
+    buying_date DATE NOT NULL,
+    party_id INT NOT NULL REFERENCES PartyMaster(id),
+    dalal_id INT REFERENCES VendorMaster(id), -- Changed from VARCHAR to FK
+    currency_type VARCHAR(10) CHECK (currency_type IN ('Rupees', 'Dollar')),
+    total_dollar 
+<truncated 7789 bytes>
+  box_id VARCHAR(50) NOT NULL REFERENCES Boxes(box_id),
+    carat NUMERIC(10, 3) NOT NULL,
+    m_price INT NOT NULL,
+    m_value INT NOT NULL
+);
+
+CREATE TABLE Transfers (
+    id SERIAL PRIMARY KEY,
+    transfer_no VARCHAR(50) UNIQUE NOT NULL,
+    date DATE NOT NULL,
+    item_type VARCHAR(15) CHECK (item_type IN ('Polish', 'Dabbi')),
+    from_location VARCHAR(20) CHECK (from_location IN ('Surat', 'Mumbai')),
+  
+<truncated 3779 bytes>
+RENCES Boxes(box_id),
+    carat NUMERIC(10, 3) NOT NULL,
+    m_price INT NOT NULL,
+    m_value INT NOT NULL
+);
+
+CREATE TABLE Users (
+8:     id SERIAL PRIMARY KEY,
+9:     username VARCHAR(50) UNIQUE NOT NULL,
+10:     password_hash VARCHAR(255) NOT NULL,
+11:     role VARCHAR(20) DEFAULT 'Billing Manager',
+12:     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+13:     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+14: );
+
+CREATE TABLE PartyMaster (
+18:     id SERIAL PRIMARY KEY,
+19:     name VARCHAR(100) NOT NULL,
+20:     city VARCHAR(50),
+21:     mobile VARCHAR(15),
+22:     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+23:     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+24: );
+
+CREATE TABLE VendorMaster (
+28:     id SERIAL PRIMARY KEY,
+29:     name VARCHAR(100) NOT NULL,
+30:     vendor_type VARCHAR(20) DEFAULT 'Dalal',
+31:     city V
+<truncated 948 bytes>
+NULL,
+58:     item_type VARCHAR(15) CHECK (item_type IN ('Polish', 'Dabbi')),
+59:     from_location VARCHAR(20) CHECK (from_location IN ('Surat', 'Mumbai')),
+60:     to_location VARCHAR(20) CHECK (to_location IN ('Surat', 'Mumbai')),
+61:     remarks VARCHAR(255),
+62:     created_by INT REFERENCES Users(id), -- Audit reference
+63:     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+64:     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+65: );
+
+CREATE TABLE TransferItems (
+69:     id SERIAL PRIMARY KEY,
+70:     transfer_id INT NOT NULL REFERENCES Transfers(id),
+71:     polish_lot_id VARCHAR(50) REFERENCES PolishLots(lot_id),
+72:     quantity INT,
+73:     box_id VARCHAR(50) REFERENCES Boxes(box_id)
+74: );
+
+CREATE TABLE VendorIssueItems (
+78:     id SERIAL PRIMARY KEY,
+79:     issue_id INT NOT NULL REFERENCES VendorIssues(id),
+80:     item_type VARCHAR(15) CHECK (item_type IN ('Polish', 'Dabbi')),
+81:     polish_lot_id VARCHAR(50) REFERENCES PolishLots(lot_id),
+82:     quantity INT,
+83:     box_id VARCHAR(50) REFERENCES Boxes(box_id)
+84: );
+
+CREATE TABLE Payments (
+88:     id SERIAL PRIMARY KEY,
+89:     payment_date DATE NOT NULL,
+90:     payment_type VARCHAR(10) CHECK (payment_type IN ('Bill', 'Cash', 'Dalali')),
+91:     amount INT NOT NULL,
+92:     remarks VARCHAR(255),
+93:     rough_buy_id INT REFERENCES RoughBuys(id),
+94:     rough_sale_id INT REFERENCES RoughSales(id),
+95:     polish_sale_id INT REFERENCES PolishSales(id),
+96:     box_sale_id INT REFERENCES BoxSales(id),
+97:     created_by INT REFERENCES Users(id), -- Audit reference
+98:     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+99:     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+100: );

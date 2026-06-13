@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Box Selling Entry</title>
+    <meta name="description" content="Box (Dabbi) Selling entry form for RV Gems ERP — sell registered polished diamond boxes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+    <div class="erp-container">
+
+        <!-- Sidebar Navigation -->
+        <aside class="erp-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">💎</span>
+                <span class="brand-text">RV GEMS ERP</span>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item active" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+                    
+                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Administrator</span>
+                        <span class="user-role">Billing Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="erp-main">
+            <header class="erp-header">
+                <div class="header-left">
+                    <h1 id="page-title">Box Selling Entry</h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+                         Dashboard
+                    </button>
+                </div>
+            </header>
+
+            <main class="erp-content">
+                <section id="view-box-selling" class="content-module active-view">
+                    <form id="box-sell-form" onsubmit="saveBoxSellEntry(event)" autocomplete="off">
+                        <div class="form-grid">
+
+                            <!-- ─── SECTION 1: GENERAL DETAILS ─── -->
+                            <div class="form-section full-width">
+                                <h3 class="section-title">General Details</h3>
+
+                                <!-- No boxes warning -->
+                                <div class="no-boxes-warning hidden" id="no-boxes-warning">
+                                    <span>⚠️</span>
+                                    <span>No Box Making entries found. Please create a box entry first via <strong>Box Making</strong> before selling.</span>
+                                    <button type="button" class="btn btn-primary btn-compact" onclick="window.location.href='box_making.html'" style="margin-left:auto;">Go to Box Making</button>
+                                </div>
+
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="source-location-select">Source Location <span class="required">*</span></label>
+                                        <select id="source-location-select" onchange="onSourceLocationChange()">
+                                            <option value="Surat">Surat</option>
+                                            <option value="Mumbai">Mumbai</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label for="selling-date">Selling Date <span class="required">*</span></label>
+                                        <input type="date" id="selling-date" required onchange="calculateFormPrices()">
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label for="dalal">Dalal (Broker) <span class="required">*</span></label>
+                                        <input type="text" id="dalal" required placeholder="Enter broker name">
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label for="party-name">Party Name <span class="required">*</span></label>
+                                        <input type="text" id="party-name" required placeholder="Enter buyer party name">
+                                    </div>
+                                </div>
+
+                                <div class="form-group-row">
+                                    <!-- ID No Selector (Checkboxes) -->
+                                    <div class="form-control">
+                                        <label for="box-search">Select Boxes to Sell <span class="required">*</span></label>
+                                        <input type="text" id="box-search" placeholder="🔍 Search boxes by ID, carat..." class="rec-search mb-sm w-full" oninput="filterBoxList()">
+                                        <div class="item-list-box" id="box-list-container" style="max-height: 150px;">
+                                            <!-- Dynamically populated checkboxes -->
+                                        </div>
+                                        <span class="field-hint" id="box-count-hint">Selected: 0 boxes</span>
+                                    </div>
+                                </div>
+
+                                <!-- Box Details Card — appears on box selection -->
+                                <div class="box-details-card hidden" id="box-details-card">
+                                    <div class="bdc-header">
+                                        <span class="bdc-title">📦 Selected Boxes Details</span>
+                                        <span class="bdc-id-badge" id="bdc-selected-count">0 Selected</span>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="bdc-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Box ID</th>
+                                                    <th>Shape</th>
+                                                    <th>Purity</th>
+                                                    <th>MM</th>
+                                                    <th class="num">Carat</th>
+                                                    <th class="num">Making Value</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="bdc-selected-boxes-tbody">
+                                                <!-- Dynamic rows -->
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="4">Total Summary</td>
+                                                    <td id="bdc-total-carat" class="num">0.00 ct</td>
+                                                    <td id="bdc-total-mvalue" class="num num-highlight">₹0</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden carat input — gets value from selected box -->
+                                <input type="hidden" id="box-carat-value" value="0">
+                            </div>
+
+                            <!-- ─── SECTION 2: PRICING & CURRENCY ─── -->
+                            <div class="form-section" id="pricing-section">
+                                <h3 class="section-title">Pricing & Currency</h3>
+
+                                <!-- Carat info badge (shown when box selected) -->
+                                <div class="carat-from-box hidden" id="carat-info-badge">
+                                    <span>🔷</span>
+                                    <span>Total Carats: <strong id="carat-badge-val">0.000</strong> ct — used for Total Price calculation</span>
+                                </div>
+
+                                <div class="form-control">
+                                    <label>Currency Type <span class="required">*</span></label>
+                                    <div class="toggle-group">
+                                        <input type="radio" id="currency-rupees" name="currency-type" value="Rupees" checked onchange="toggleCurrencyMode()">
+                                        <label for="currency-rupees" class="toggle-btn">Rupees (₹)</label>
+                                        <input type="radio" id="currency-dollar" name="currency-type" value="Dollar" onchange="toggleCurrencyMode()">
+                                        <label for="currency-dollar" class="toggle-btn">Dollar ($)</label>
+                                    </div>
+                                </div>
+
+                                <!-- Rupees mode -->
+                                <div id="rupees-fields-container">
+                                    <div class="form-control">
+                                        <label for="price">Price (₹/ct) <span class="required">*</span></label>
+                                        <input type="number" id="price" min="0" step="1" placeholder="Enter selling price per carat" oninput="calculateFormPrices()">
+                                        <span class="field-hint">Your selling rate per carat in Rupees</span>
+                                    </div>
+                                </div>
+
+                                <!-- Dollar mode -->
+                                <div id="dollar-fields-container" class="hidden">
+                                    <div class="form-group-row">
+                                        <div class="form-control">
+                                            <label for="total-dollar">Total Dollars ($) <span class="required">*</span></label>
+                                            <input type="number" id="total-dollar" min="0" step="1" placeholder="e.g. 200" oninput="calculateFormPrices()">
+                                        </div>
+                                        <div class="form-control">
+                                            <label for="dollar-rate">Dollar Rate (₹) <span class="required">*</span></label>
+                                            <input type="number" id="dollar-rate" min="0" step="1" placeholder="e.g. 84" oninput="calculateFormPrices()">
+                                        </div>
+                                        <div class="form-control">
+                                            <label for="price-auto">Auto Price (₹/ct)</label>
+                                            <input type="text" id="price-auto" readonly class="readonly-input" placeholder="Calculated">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-control">
+                                    <label for="total-price">Total Price (Carat × Price) (₹)</label>
+                                    <input type="text" id="total-price" readonly class="readonly-input total-price-input" value="₹0.00">
+                                </div>
+                            </div>
+
+                            <!-- ─── SECTION 3: DISCOUNT, SPLIT & TAX ─── -->
+                            <div class="form-section">
+                                <h3 class="section-title">Discount, Split & Tax Details</h3>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="discount">Discount (%)</label>
+                                        <input type="number" id="discount" min="0" max="100" step="0.1" value="0" oninput="calculateFormPrices()">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="discounted-amount">Amt After Discount (₹)</label>
+                                        <input type="text" id="discounted-amount" readonly class="readonly-input" value="₹0.00">
+                                    </div>
+                                </div>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="dalali-pct">Dalali (%)</label>
+                                        <input type="number" id="dalali-pct" min="0" max="100" step="0.1" value="0" oninput="calculateFormPrices()">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="dalali-amount">Dalali Amount (₹)</label>
+                                        <input type="text" id="dalali-amount" readonly class="readonly-input" value="₹0.00">
+                                    </div>
+                                </div>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="bill-percentage">Bill Percentage (%)</label>
+                                        <input type="number" id="bill-percentage" min="0" max="100" step="0.1" value="0" oninput="calculateFormPrices()">
+                                        <span class="field-hint">Default is 0%</span>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="gst-amount">GST (1.5% on Bill Amount) (₹)</label>
+                                        <input type="text" id="gst-amount" readonly class="readonly-input" value="₹0.00">
+                                    </div>
+                                </div>
+
+                                <div class="detail-split-box">
+                                    <div class="split-row">
+                                        <div class="split-col">
+                                            <span class="split-label">Bill Amount (Before Tax):</span>
+                                            <span class="split-value" id="label-bill-amt">₹0.00</span>
+                                        </div>
+                                        <div class="split-col">
+                                            <span class="split-label">Cash Amount:</span>
+                                            <span class="split-value" id="label-cash-amt">₹0.00</span>
+                                        </div>
+                                    </div>
+                                    <div class="split-row total-row border-top">
+                                        <div class="split-col">
+                                            <span class="split-label">Net Bill Amount (with GST):</span>
+                                            <strong class="split-value" id="label-net-bill">₹0.00</strong>
+                                        </div>
+                                        <div class="split-col">
+                                            <span class="split-label">Net Cash Amount:</span>
+                                            <strong class="split-value" id="label-net-cash">₹0.00</strong>
+                                        </div>
+                                    </div>
+                                    <div class="split-row total-row border-top">
+                                        <div class="split-col">
+                                            <span class="split-label">Total Dalali Amount:</span>
+                                            <strong class="split-value" id="label-dalali-amt-split">₹0.00</strong>
+                                        </div>
+                                    </div>
+                                    <div class="split-row final-row">
+                                        <div class="split-col full-width text-center">
+                                            <span class="split-label">Final Amount (Net Bill + Net Cash + Dalali):</span>
+                                            <h2 class="split-value text-blue" id="label-final-amount">₹0.00</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ─── SECTION 4: INITIAL ACCOUNTING ─── -->
+                            <div class="form-section">
+                                <h3 class="section-title">Initial Accounting</h3>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="initial-payment-type">Payment Received In</label>
+                                        <select id="initial-payment-type" onchange="calculateFormPrices()">
+                                            <option value="Pending">Pending (No Payment)</option>
+                                            <option value="Bill">Bill Account</option>
+                                            <option value="Cash">Cash Account</option>
+                                            <option value="Both">Both Accounts</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="initial-received">Received Amount (₹)</label>
+                                        <input type="number" id="initial-received" min="0" step="1" value="0" oninput="calculateFormPrices()">
+                                    </div>
+                                </div>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="initial-remarks">Remarks / Comments</label>
+                                        <input type="text" id="initial-remarks" placeholder="Enter transaction or payment remarks">
+                                    </div>
+                                </div>
+                                <div class="balance-summary-bar">
+                                    <span>Remaining Outstanding Balance: <strong id="initial-outstanding" class="text-orange">₹0.00</strong></span>
+                                </div>
+                            </div>
+
+                            <!-- ─── SECTION 5: PAYMENT DEADLINE ─── -->
+                            <div class="form-section">
+                                <h3 class="section-title">Payment Deadline</h3>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="deadline-days">Deadline Days</label>
+                                        <input type="number" id="deadline-days" min="0" step="1" value="30" oninput="calculateFormPrices()">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="deadline-date-display">Calculated Deadline Date</label>
+                                        <input type="text" id="deadline-date-display" readonly class="readonly-input" value="-">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='index.html'">Cancel</button>
+                            <button type="submit" class="btn btn-primary">💾 Save Box Sale Entry</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/shared.js"></script>
+    <script src="js/box_selling.js"></script>
+</body>
+</html>
+
