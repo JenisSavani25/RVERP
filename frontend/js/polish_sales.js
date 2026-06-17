@@ -538,15 +538,20 @@ async function saveSaleEntry(event) {
         issueNo: prefilledIssueNo
     };
 
-    polishSalesList.push(newSale);
-    await savePolishSaleOnServer(newSale);
+    try {
+        polishSalesList.push(newSale);
+        await savePolishSaleOnServer(newSale);
 
-    if (prefilledIssueNo && lotId) {
-        await resolveVendorIssueOnSale(prefilledIssueNo, lotId, pieces);
+        if (prefilledIssueNo && lotId) {
+            await resolveVendorIssueOnSale(prefilledIssueNo, lotId, pieces);
+        }
+        
+        // Redirect only when server confirms save
+        window.location.href = "index.html";
+    } catch (e) {
+        polishSalesList = polishSalesList.filter(item => item.sellingNo !== newSale.sellingNo);
+        alert("Could not save this polish sale entry.\n\n" + e.message);
     }
-    
-    // Redirect back to dashboard
-    window.location.href = "index.html";
 }
 
 function onSourceLocationChange() {

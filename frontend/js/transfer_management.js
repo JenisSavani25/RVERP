@@ -253,17 +253,22 @@ async function saveTransferEntry(event) {
         newTransfer.boxIds = boxIds;
     }
 
-    // Save Transfer Record
-    transfersList.push(newTransfer);
-    await saveTransferOnServer(newTransfer);
+    try {
+        // Save Transfer Record
+        transfersList.push(newTransfer);
+        await saveTransferOnServer(newTransfer);
 
-    // Reset Form & UI
-    alert(`Transfer ${transferNo} executed successfully!`);
-    document.getElementById("transfer-remarks").value = "";
-    
-    setNextTransferNumber();
-    populateSelections();
-    renderTransferLog();
+        // Reset Form & UI
+        alert(`Transfer ${transferNo} executed successfully!`);
+        document.getElementById("transfer-remarks").value = "";
+        
+        setNextTransferNumber();
+        populateSelections();
+        renderTransferLog();
+    } catch (e) {
+        transfersList = transfersList.filter(item => item.transferNo !== newTransfer.transferNo);
+        alert("Transfer save failed.\n\n" + e.message);
+    }
 }
 
 function renderTransferLog() {

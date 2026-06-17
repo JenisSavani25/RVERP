@@ -525,15 +525,20 @@ async function saveConversion(event) {
         createdAt:      new Date().toISOString()
     };
 
-    conversionList.push(newConv);
-    await saveConversionOnServer(newConv);
+    try {
+        conversionList.push(newConv);
+        await saveConversionOnServer(newConv);
 
-    // Refresh without page reload
-    toggleConvForm();
-    refreshInventory();
+        // Refresh without page reload
+        toggleConvForm();
+        refreshInventory();
 
-    // Show quick confirmation
-    showToast(`✅ Conversion saved: −${roughPcs} Rough → +${polishPcs} Polish`);
+        // Show quick confirmation
+        showToast(`✅ Conversion saved: −${roughPcs} Rough → +${polishPcs} Polish`);
+    } catch (e) {
+        conversionList = conversionList.filter(item => item.createdAt !== newConv.createdAt);
+        alert("Conversion save failed.\n\n" + e.message);
+    }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

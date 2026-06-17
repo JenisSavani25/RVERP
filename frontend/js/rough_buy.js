@@ -547,8 +547,12 @@ async function saveBuyEntry(event) {
         payments
     };
 
-    await saveRoughBuyOnServer(newBuy);
-    
-    // Redirect back to dashboard
-    window.location.href = "index.html";
+    try {
+        await saveRoughBuyOnServer(newBuy);
+        // Only redirect once the server confirms the insert succeeded
+        window.location.href = "index.html";
+    } catch (e) {
+        alert("Could not save this entry to the server.\n\n" + e.message +
+              "\n\nThe record was NOT saved. Please screenshot this and the Network tab.");
+    }
 }

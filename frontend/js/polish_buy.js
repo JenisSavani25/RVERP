@@ -461,8 +461,11 @@ async function saveBuyEntry(event) {
         payments
     };
 
-    await savePolishLotOnServer(newBuy);
-    
-    // Redirect back to dashboard
-    window.location.href = "index.html";
+    try {
+        await savePolishLotOnServer(newBuy);
+        // Redirect only when server confirms save
+        window.location.href = "index.html";
+    } catch (e) {
+        alert("Could not save this polish buy entry.\n\n" + e.message);
+    }
 }

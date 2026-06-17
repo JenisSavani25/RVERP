@@ -488,8 +488,11 @@ async function saveSaleEntry(event) {
         payments
     };
 
-    await saveRoughSaleOnServer(newSale);
-    
-    // Redirect back to dashboard
-    window.location.href = "index.html";
+    try {
+        await saveRoughSaleOnServer(newSale);
+        // Redirect only when server confirms save
+        window.location.href = "index.html";
+    } catch (e) {
+        alert("Could not save this rough sale entry.\n\n" + e.message);
+    }
 }

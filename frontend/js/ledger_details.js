@@ -369,14 +369,17 @@ async function addPaymentEntry(event) {
         amount
     };
 
-    sale.payments.push(newPayment);
-    
-    await addPaymentOnServer(newPayment, currentTransactionType, currentActiveTransactionId);
-    
-    loadTransactionLedger(currentActiveTransactionId);
-    
-    // Clear form
-    document.getElementById("payment-amount").value = "";
+    try {
+        sale.payments.push(newPayment);
+        await addPaymentOnServer(newPayment, currentTransactionType, currentActiveTransactionId);
+        loadTransactionLedger(currentActiveTransactionId);
+        
+        // Clear form
+        document.getElementById("payment-amount").value = "";
+    } catch (e) {
+        sale.payments = sale.payments.filter(p => p.id !== newPayment.id);
+        alert("Could not add payment.\n\n" + e.message);
+    }
 }
 
 async function deletePayment(paymentId) {
@@ -387,9 +390,14 @@ async function deletePayment(paymentId) {
     });
     if (!sale) return;
 
+    const existingPayments = [...sale.payments];
     sale.payments = sale.payments.filter(p => p.id !== paymentId);
     
-    await deletePaymentOnServer(paymentId);
-    
-    loadTransactionLedger(currentActiveTransactionId);
+    try {
+        await deletePaymentOnServer(paymentId);
+        loadTransactionLedger(currentActiveTransactionId);
+    } catch (e) {
+        sale.payments = existingPayments;
+        alert("Could not delete payment.\n\n" + e.message);
+    }
 }

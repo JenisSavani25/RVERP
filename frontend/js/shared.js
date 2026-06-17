@@ -583,191 +583,199 @@ function getDabbiStockDistribution() {
 }
 
 async function saveRoughBuyOnServer(newBuy) {
+    let response;
     try {
-        const response = await fetch(`${API_BASE_URL}/rough-buys`, {
+        response = await fetch(`${API_BASE_URL}/rough-buys`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newBuy)
         });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-        console.log("Rough Buy saved successfully on server.");
-    } catch (e) {
-        console.error("Server save failed", e);
+    } catch (networkErr) {
+        // No response at all = network/CORS failure (request never completed)
+        console.error("Rough Buy save: network/CORS failure", networkErr);
+        throw new Error("Network/CORS error reaching the server: " + networkErr.message);
     }
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        console.error(`Rough Buy save failed: HTTP ${response.status}`, body);
+        throw new Error(`Server rejected save (HTTP ${response.status}): ${body}`);
+    }
+    console.log("Rough Buy saved successfully on server.");
+    return response.json().catch(() => ({}));
 }
 
 async function saveRoughSaleOnServer(newSale) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/rough-sales`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newSale)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/rough-sales`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSale)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected rough sale save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function savePolishLotOnServer(newBuy) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/polish-lots`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newBuy)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/polish-lots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBuy)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected polish buy save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function savePolishSaleOnServer(newSale) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/polish-sales`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newSale)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/polish-sales`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSale)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected polish sale save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function saveConversionOnServer(newConv) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/conversions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newConv)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/conversions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConv)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected conversion save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function saveBoxOnServer(newEntry) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/boxes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newEntry)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/boxes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEntry)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected box save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function saveBoxSaleOnServer(newSale) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/box-sales`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newSale)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/box-sales`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSale)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected box sale save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function saveTransferOnServer(newTransfer) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/transfers`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newTransfer)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/transfers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTransfer)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected transfer save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function saveVendorOnServer(newVendor) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/vendors`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newVendor)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/vendors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newVendor)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected vendor save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function saveVendorIssueOnServer(newIssue) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/vendor-issues`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newIssue)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server save failed", e);
+    const response = await fetch(`${API_BASE_URL}/vendor-issues`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newIssue)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected vendor issue save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function resolveVendorIssueOnServer(issueNo, lotId, pieces) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/vendor-issues/resolve`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ issueNo, status: 'Sold' })
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server resolve failed", e);
+    const response = await fetch(`${API_BASE_URL}/vendor-issues/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issueNo, status: 'Sold' })
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected vendor issue resolve (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function addPaymentOnServer(newPayment, transactionType, transactionId) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/payments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                paymentId: newPayment.id,
-                date: newPayment.date,
-                type: newPayment.type,
-                amount: newPayment.amount,
-                remarks: newPayment.remarks || '',
-                transactionType,
-                transactionId
-            })
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server payment save failed", e);
+    const response = await fetch(`${API_BASE_URL}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            paymentId: newPayment.id,
+            date: newPayment.date,
+            type: newPayment.type,
+            amount: newPayment.amount,
+            remarks: newPayment.remarks || '',
+            transactionType,
+            transactionId
+        })
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected payment save (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function deletePaymentOnServer(paymentId) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
-            method: 'DELETE'
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server payment delete failed", e);
+    const response = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected payment delete (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 
 async function updateVendorIssueOnServer(issue) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/vendor-issues/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(issue)
-        });
-        if (!response.ok) throw new Error("HTTP error " + response.status);
-    } catch (e) {
-        console.error("Server update failed", e);
+    const response = await fetch(`${API_BASE_URL}/vendor-issues/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(issue)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected vendor issue update (HTTP ${response.status}): ${body}`);
     }
+    return response.json().catch(() => ({}));
 }
 

@@ -358,11 +358,16 @@ async function saveBoxEntry(event) {
         createdAt: new Date().toISOString()
     };
 
-    boxMakingList.push(newEntry);
-    await saveBoxOnServer(newEntry);
-
-    // Redirect back to dashboard after save
-    window.location.href = "index.html";
+    try {
+        boxMakingList.push(newEntry);
+        await saveBoxOnServer(newEntry);
+        // Redirect only when server confirms save
+        window.location.href = "index.html";
+    } catch (e) {
+        // Keep local list aligned with server persistence on failure
+        boxMakingList = boxMakingList.filter(item => item.idNo !== newEntry.idNo);
+        alert("Could not save this box making entry.\n\n" + e.message);
+    }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

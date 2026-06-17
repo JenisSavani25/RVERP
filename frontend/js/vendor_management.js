@@ -92,19 +92,24 @@ async function saveVendorMaster(event) {
         createdAt: new Date().toISOString()
     };
 
-    vendorsList.push(newVendor);
-    await saveVendorOnServer(newVendor);
+    try {
+        vendorsList.push(newVendor);
+        await saveVendorOnServer(newVendor);
 
-    alert(`Vendor ${name} registered successfully!`);
-    
-    // Reset vendor form fields
-    document.getElementById("vendor-name").value = "";
-    document.getElementById("vendor-city").value = "";
-    document.getElementById("vendor-mobile").value = "";
+        alert(`Vendor ${name} registered successfully!`);
+        
+        // Reset vendor form fields
+        document.getElementById("vendor-name").value = "";
+        document.getElementById("vendor-city").value = "";
+        document.getElementById("vendor-mobile").value = "";
 
-    setNextVendorId();
-    populateVendorDropdown();
-    renderVendorsList();
+        setNextVendorId();
+        populateVendorDropdown();
+        renderVendorsList();
+    } catch (e) {
+        vendorsList = vendorsList.filter(item => item.vendorId !== newVendor.vendorId);
+        alert("Vendor save failed.\n\n" + e.message);
+    }
 }
 
 function renderVendorsList() {
@@ -380,18 +385,23 @@ async function saveInventoryIssue(event) {
         createdAt: new Date().toISOString()
     };
 
-    issuesList.push(newIssue);
-    await saveVendorIssueOnServer(newIssue);
+    try {
+        issuesList.push(newIssue);
+        await saveVendorIssueOnServer(newIssue);
 
-    alert(`Consignment ${issueNo} issued successfully to ${vendor.name}!`);
+        alert(`Consignment ${issueNo} issued successfully to ${vendor.name}!`);
 
-    // Reset staged items
-    stagedItems = [];
-    renderStagedItems();
+        // Reset staged items
+        stagedItems = [];
+        renderStagedItems();
 
-    setNextIssueNo();
-    handleStageTypeChange();
-    renderConsignments();
+        setNextIssueNo();
+        handleStageTypeChange();
+        renderConsignments();
+    } catch (e) {
+        issuesList = issuesList.filter(item => item.issueNo !== newIssue.issueNo);
+        alert("Consignment save failed.\n\n" + e.message);
+    }
 }
 
 function renderConsignments() {
@@ -537,14 +547,18 @@ async function returnConsignedItem(issueNo, itemToReturn) {
         isSplit = true;
     }
 
-    await updateVendorIssueOnServer(iss);
-    if (isSplit && returnedIssue) {
-        await saveVendorIssueOnServer(returnedIssue);
+    try {
+        await updateVendorIssueOnServer(iss);
+        if (isSplit && returnedIssue) {
+            await saveVendorIssueOnServer(returnedIssue);
+        }
+        
+        alert("Item marked as returned successfully and added back to Mumbai Stock!");
+        renderConsignments();
+        handleStageTypeChange();
+    } catch (e) {
+        alert("Could not update consignment return status.\n\n" + e.message);
     }
-    
-    alert("Item marked as returned successfully and added back to Mumbai Stock!");
-    renderConsignments();
-    handleStageTypeChange();
 }
 
 function sellConsignedItem(issueNo, vendorName, itemToSell) {

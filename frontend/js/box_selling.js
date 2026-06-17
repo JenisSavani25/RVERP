@@ -671,15 +671,20 @@ async function saveBoxSellEntry(event) {
         sourceLocation: document.getElementById("source-location-select") ? document.getElementById("source-location-select").value : (prefilledSourceLocation || 'Surat')
     };
 
-    boxSellingList.push(newEntry);
-    await saveBoxSaleOnServer(newEntry);
+    try {
+        boxSellingList.push(newEntry);
+        await saveBoxSaleOnServer(newEntry);
 
-    // Resolve corresponding vendor issue if needed
-    if (prefilledIssueNo) {
-        await resolveVendorIssueOnSale(prefilledIssueNo, selectedBoxIds);
+        // Resolve corresponding vendor issue if needed
+        if (prefilledIssueNo) {
+            await resolveVendorIssueOnSale(prefilledIssueNo, selectedBoxIds);
+        }
+
+        window.location.href = "index.html";
+    } catch (e) {
+        boxSellingList = boxSellingList.filter(item => item.sellingNo !== newEntry.sellingNo);
+        alert("Could not save this box sale entry.\n\n" + e.message);
     }
-
-    window.location.href = "index.html";
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
