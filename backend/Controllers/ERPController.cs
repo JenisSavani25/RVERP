@@ -107,7 +107,7 @@ namespace backend.Controllers
             var entity = new RoughBuy
             {
                 BuyingNo = input.BuyingNo,
-                BuyingDate = input.BuyingDate,
+                BuyingDate = ToUtc(input.BuyingDate),
                 PartyId = partyId,
                 DalalId = dalalId,
                 CurrencyType = input.CurrencyType,
@@ -127,7 +127,7 @@ namespace backend.Controllers
                 NetCashAmount = input.NetCashAmount,
                 FinalAmount = input.FinalAmount,
                 DeadlineDays = input.DeadlineDays,
-                DeadlineDate = input.DeadlineDate,
+                DeadlineDate = ToUtc(input.DeadlineDate),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -139,7 +139,7 @@ namespace backend.Controllers
                     entity.Payments.Add(new Payment
                     {
                         PaymentId = p.Id,
-                        PaymentDate = p.Date,
+                        PaymentDate = ToUtc(p.Date),
                         PaymentType = p.Type,
                         Amount = p.Amount,
                         Remarks = p.Remarks,
@@ -164,7 +164,7 @@ namespace backend.Controllers
             var entity = new RoughSale
             {
                 SellingNo = input.SellingNo,
-                SellingDate = input.SellingDate,
+                SellingDate = ToUtc(input.SellingDate),
                 PartyId = partyId,
                 DalalId = dalalId,
                 Pieces = input.Pieces,
@@ -184,7 +184,7 @@ namespace backend.Controllers
                 NetCashAmount = input.NetCashAmount,
                 FinalAmount = input.FinalAmount,
                 DeadlineDays = input.DeadlineDays,
-                DeadlineDate = input.DeadlineDate,
+                DeadlineDate = ToUtc(input.DeadlineDate),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -196,7 +196,7 @@ namespace backend.Controllers
                     entity.Payments.Add(new Payment
                     {
                         PaymentId = p.Id,
-                        PaymentDate = p.Date,
+                        PaymentDate = ToUtc(p.Date),
                         PaymentType = p.Type,
                         Amount = p.Amount,
                         Remarks = p.Remarks,
@@ -222,7 +222,7 @@ namespace backend.Controllers
             {
                 LotId = $"PB-{input.BuyingNo}",
                 BuyingNo = input.BuyingNo,
-                BuyingDate = input.BuyingDate,
+                BuyingDate = ToUtc(input.BuyingDate),
                 PartyId = partyId,
                 DalalId = dalalId,
                 Pieces = input.Pieces,
@@ -242,7 +242,7 @@ namespace backend.Controllers
                 NetCashAmount = input.NetCashAmount,
                 FinalAmount = input.FinalAmount,
                 DeadlineDays = input.DeadlineDays,
-                DeadlineDate = input.DeadlineDate,
+                DeadlineDate = ToUtc(input.DeadlineDate),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -254,7 +254,7 @@ namespace backend.Controllers
                     entity.Payments.Add(new Payment
                     {
                         PaymentId = p.Id,
-                        PaymentDate = p.Date,
+                        PaymentDate = ToUtc(p.Date),
                         PaymentType = p.Type,
                         Amount = p.Amount,
                         Remarks = p.Remarks,
@@ -279,7 +279,7 @@ namespace backend.Controllers
             var entity = new PolishSale
             {
                 SellingNo = input.SellingNo,
-                SellingDate = input.SellingDate,
+                SellingDate = ToUtc(input.SellingDate),
                 PartyId = partyId,
                 DalalId = dalalId,
                 Pieces = input.Pieces,
@@ -301,7 +301,7 @@ namespace backend.Controllers
                 NetCashAmount = input.NetCashAmount,
                 FinalAmount = input.FinalAmount,
                 DeadlineDays = input.DeadlineDays,
-                DeadlineDate = input.DeadlineDate,
+                DeadlineDate = ToUtc(input.DeadlineDate),
                 LotId = input.LotId,
                 SourceLocation = input.SourceLocation,
                 IssueNo = input.IssueNo,
@@ -316,7 +316,7 @@ namespace backend.Controllers
                     entity.Payments.Add(new Payment
                     {
                         PaymentId = p.Id,
-                        PaymentDate = p.Date,
+                        PaymentDate = ToUtc(p.Date),
                         PaymentType = p.Type,
                         Amount = p.Amount,
                         Remarks = p.Remarks,
@@ -337,7 +337,7 @@ namespace backend.Controllers
         {
             var conversion = new Conversion
             {
-                ConversionDate = input.ConversionDate,
+                ConversionDate = ToUtc(input.ConversionDate),
                 RoughPieces = input.RoughPieces,
                 PolishPieces = input.PolishPieces,
                 Remarks = input.Remarks,
@@ -353,7 +353,7 @@ namespace backend.Controllers
             var polishLot = new PolishLot
             {
                 LotId = lotId,
-                BuyingDate = input.ConversionDate,
+                BuyingDate = ToUtc(input.ConversionDate),
                 Pieces = input.PolishPieces,
                 Carat = input.PolishPieces * 0.1m, // Approx carat
                 ConversionId = conversion.Id,
@@ -439,7 +439,7 @@ namespace backend.Controllers
             var entity = new BoxSale
             {
                 SellingNo = input.SellingNo,
-                SellingDate = input.SellingDate,
+                SellingDate = ToUtc(input.SellingDate),
                 PartyId = partyId,
                 DalalId = dalalId,
                 CurrencyType = input.CurrencyType,
@@ -459,7 +459,7 @@ namespace backend.Controllers
                 NetCashAmount = input.NetCashAmount,
                 FinalAmount = input.FinalAmount,
                 DeadlineDays = input.DeadlineDays,
-                DeadlineDate = input.DeadlineDate,
+                DeadlineDate = ToUtc(input.DeadlineDate),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -485,7 +485,7 @@ namespace backend.Controllers
                     entity.Payments.Add(new Payment
                     {
                         PaymentId = p.Id,
-                        PaymentDate = p.Date,
+                        PaymentDate = ToUtc(p.Date),
                         PaymentType = p.Type,
                         Amount = p.Amount,
                         Remarks = p.Remarks,
@@ -507,7 +507,7 @@ namespace backend.Controllers
             var entity = new Transfer
             {
                 TransferNo = input.TransferNo,
-                Date = input.Date,
+                Date = ToUtc(input.Date),
                 ItemType = input.ItemType,
                 FromLocation = input.FromLocation,
                 ToLocation = input.ToLocation,
@@ -571,7 +571,7 @@ namespace backend.Controllers
             var entity = new VendorIssue
             {
                 IssueNo = input.IssueNo,
-                Date = input.Date,
+                Date = ToUtc(input.Date),
                 VendorId = vendor.Id,
                 Status = "Pending",
                 Remarks = input.Remarks,
@@ -651,7 +651,7 @@ namespace backend.Controllers
             var payment = new Payment
             {
                 PaymentId = input.PaymentId,
-                PaymentDate = input.Date,
+                PaymentDate = ToUtc(input.Date),
                 PaymentType = input.Type,
                 Amount = input.Amount,
                 Remarks = input.Remarks,
@@ -953,6 +953,16 @@ namespace backend.Controllers
             amount = p.Amount,
             remarks = p.Remarks
         };
+
+        private static DateTime ToUtc(DateTime value)
+        {
+            if (value.Kind == DateTimeKind.Utc) return value;
+            if (value.Kind == DateTimeKind.Unspecified)
+            {
+                return DateTime.SpecifyKind(value, DateTimeKind.Utc);
+            }
+            return value.ToUniversalTime();
+        }
 
         // Helper Lookups
         private async Task<int> GetOrCreatePartyIdAsync(string partyName)
