@@ -110,6 +110,8 @@ namespace backend.Controllers
                 BuyingDate = ToUtc(input.BuyingDate),
                 PartyId = partyId,
                 DalalId = dalalId,
+                Pieces = input.Pieces,
+                Carat = input.Carat,
                 CurrencyType = input.CurrencyType,
                 TotalDollar = input.TotalDollar,
                 DollarRate = input.DollarRate,
