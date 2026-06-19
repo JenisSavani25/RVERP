@@ -89,6 +89,10 @@ namespace backend.Models
         [Column("lot_id")]
         public string? LotId { get; set; }
 
+        [MaxLength(100)]
+        [Column("shape_name")]
+        public string? ShapeName { get; set; }
+
         [MaxLength(20)]
         [Column("source_location")]
         public string SourceLocation { get; set; } = "Surat";

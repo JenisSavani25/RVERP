@@ -36,56 +36,84 @@ function formatPolishShapeLabel(shape) {
 
 /** Mumbai polish stock for a shape (from transfers minus pending vendor issues). */
 function getPolishShapeAvailInMumbai(shapeName, extraStaged = []) {
+    return getPolishShapeMumbaiAvail(shapeName, extraStaged).pcs;
+}
+
+function getPolishShapeMumbaiAvail(shapeName, extraStaged = []) {
     const shape = (shapeName || "").trim().toUpperCase();
-    if (!shape) return 0;
+    if (!shape) return { pcs: 0, carat: 0 };
 
-    loadTransferData();
-    loadIssueData();
-
-    let qty = 0;
-
-    transfersList.forEach(t => {
-        if (t.itemType !== "Polish") return;
-        if ((t.shapeName || "").toUpperCase() !== shape) return;
-        const q = parseInt(t.quantity) || 0;
-        if (t.toLocation === "Mumbai") qty += q;
-        if (t.fromLocation === "Mumbai") qty -= q;
-    });
-
-    issuesList.forEach(iss => {
-        if (iss.status !== "Pending") return;
-        iss.items.forEach(item => {
-            if (item.type !== "Polish") return;
-            const s = (item.shapeName || item.lotId || "").toUpperCase();
-            if (s !== shape) return;
-            qty -= parseInt(item.quantity) || 0;
-        });
-    });
+    const row = getPolishShapeStockDistribution()[shape] || {};
+    let pcs = row.available || 0;
+    let carat = row.availableCarat || 0;
 
     extraStaged.forEach(item => {
         if (item.type !== "Polish") return;
         if ((item.shapeName || "").toUpperCase() !== shape) return;
-        qty -= parseInt(item.quantity) || 0;
+        pcs -= parseInt(item.quantity) || 0;
+        carat -= parseFloat(item.carat) || 0;
     });
 
-    return Math.max(0, qty);
+    return { pcs: Math.max(0, pcs), carat: Math.max(0, carat) };
 }
 
-/** Per-shape Mumbai polish stock (from transfers + vendor consignments). */
+function getPolishShapeSaleAvail(shapeName, issueNo) {
+    const shape = (shapeName || "").trim().toUpperCase();
+    if (!shape) return { pcs: 0, carat: 0 };
+
+    if (issueNo) {
+        const iss = issuesList.find(i => i.issueNo === issueNo && i.status === "Pending");
+        if (iss) {
+            const item = iss.items.find(it => {
+                if (it.type !== "Polish") return false;
+                return (it.shapeName || it.lotId || "").toUpperCase() === shape;
+            });
+            if (item) {
+                return {
+                    pcs: parseInt(item.quantity) || 0,
+                    carat: parseFloat(item.carat) || 0
+                };
+            }
+        }
+    }
+
+    return getPolishShapeMumbaiAvail(shape);
+}
+
+/** Per-shape Mumbai polish stock (from transfers + vendor consignments + sales). */
 function getPolishShapeStockDistribution() {
     loadTransferData();
     loadIssueData();
+    loadPolishSalesData();
 
     const shapes = {};
     POLISH_SHAPE_OPTIONS.forEach(s => {
-        shapes[s] = { shapeName: s, label: formatPolishShapeLabel(s), available: 0, vendor: 0, total: 0 };
+        shapes[s] = {
+            shapeName: s,
+            label: formatPolishShapeLabel(s),
+            available: 0,
+            availableCarat: 0,
+            vendor: 0,
+            vendorCarat: 0,
+            total: 0,
+            totalCarat: 0
+        };
     });
 
     const ensureShape = (raw) => {
         const key = (raw || "").trim().toUpperCase();
         if (!key) return null;
         if (!shapes[key]) {
-            shapes[key] = { shapeName: key, label: formatPolishShapeLabel(key), available: 0, vendor: 0, total: 0 };
+            shapes[key] = {
+                shapeName: key,
+                label: formatPolishShapeLabel(key),
+                available: 0,
+                availableCarat: 0,
+                vendor: 0,
+                vendorCarat: 0,
+                total: 0,
+                totalCarat: 0
+            };
         }
         return shapes[key];
     };
@@ -95,8 +123,15 @@ function getPolishShapeStockDistribution() {
         const s = ensureShape(t.shapeName || t.lotId);
         if (!s) return;
         const q = parseInt(t.quantity) || 0;
-        if (t.toLocation === "Mumbai") s.available += q;
-        if (t.fromLocation === "Mumbai") s.available -= q;
+        const ct = parseFloat(t.carat) || 0;
+        if (t.toLocation === "Mumbai") {
+            s.available += q;
+            s.availableCarat += ct;
+        }
+        if (t.fromLocation === "Mumbai") {
+            s.available -= q;
+            s.availableCarat -= ct;
+        }
     });
 
     issuesList.forEach(iss => {
@@ -106,14 +141,38 @@ function getPolishShapeStockDistribution() {
             const s = ensureShape(item.shapeName || item.lotId);
             if (!s) return;
             const q = parseInt(item.quantity) || 0;
+            const ct = parseFloat(item.carat) || 0;
             s.vendor += q;
+            s.vendorCarat += ct;
             s.available -= q;
+            s.availableCarat -= ct;
         });
+    });
+
+    polishSalesList.forEach(sale => {
+        const shapeKey = (sale.shapeName || sale.lotId || "").trim().toUpperCase();
+        if (!shapeKey) return;
+        const s = ensureShape(shapeKey);
+        if (!s) return;
+        const q = parseInt(sale.pieces) || 0;
+        const ct = parseFloat(sale.carat) || 0;
+        const loc = sale.sourceLocation || "Mumbai";
+        if (loc === "Vendor") {
+            s.vendor = Math.max(0, s.vendor - q);
+            s.vendorCarat = Math.max(0, s.vendorCarat - ct);
+        } else if (loc === "Mumbai") {
+            s.available = Math.max(0, s.available - q);
+            s.availableCarat = Math.max(0, s.availableCarat - ct);
+        }
     });
 
     Object.values(shapes).forEach(s => {
         s.available = Math.max(0, s.available);
+        s.availableCarat = Math.max(0, s.availableCarat);
+        s.vendor = Math.max(0, s.vendor);
+        s.vendorCarat = Math.max(0, s.vendorCarat);
         s.total = s.available + s.vendor;
+        s.totalCarat = s.availableCarat + s.vendorCarat;
     });
 
     return shapes;

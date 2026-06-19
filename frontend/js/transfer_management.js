@@ -122,16 +122,40 @@ function populateSelections() {
 
 function handlePolishShapeChange() {
     const fromLoc = document.getElementById("from-location").value;
-    const avail = getPolishAvailAtLocation(fromLoc);
+    const shapeName = document.getElementById("polish-shape-name").value;
     const availHint = document.getElementById("polish-avail-hint");
+    const caratHint = document.getElementById("polish-carat-hint");
     const qtyInput = document.getElementById("polish-quantity");
+    const caratInput = document.getElementById("polish-carat");
 
-    availHint.textContent = `Available in ${fromLoc}: ${avail} pcs`;
-    qtyInput.max = avail;
+    let availPcs = 0;
+    let availCt = 0;
+
+    if (fromLoc === "Mumbai" && shapeName) {
+        const avail = getPolishShapeMumbaiAvail(shapeName);
+        availPcs = avail.pcs;
+        availCt = avail.carat;
+    } else {
+        availPcs = getPolishAvailAtLocation(fromLoc);
+    }
+
+    availHint.textContent = `Available in ${fromLoc}: ${availPcs} pcs`;
+    if (caratHint) {
+        caratHint.textContent = fromLoc === "Mumbai" && shapeName
+            ? `Available: ${availCt.toFixed(2)} ct`
+            : "Enter carat for this transfer";
+    }
+
+    qtyInput.max = availPcs > 0 ? availPcs : "";
 
     const qty = parseInt(qtyInput.value) || 0;
-    if (avail > 0 && qty > avail) {
-        qtyInput.value = avail;
+    if (availPcs > 0 && qty > availPcs) {
+        qtyInput.value = availPcs;
+    }
+
+    if (caratInput && fromLoc === "Mumbai" && shapeName && availCt > 0) {
+        const ct = parseFloat(caratInput.value) || 0;
+        if (ct > availCt) caratInput.value = availCt.toFixed(3);
     }
 }
 
@@ -144,8 +168,10 @@ function updateDabbiSelectedCount() {
 function formatPolishTransferDetail(t) {
     const shape = (t.shapeName || "").trim().toUpperCase();
     const qty = parseInt(t.quantity) || 0;
-    if (shape) return `${shape} — ${qty} pcs`;
-    if (qty > 0) return `${qty} pcs`;
+    const ct = parseFloat(t.carat) || 0;
+    const ctStr = ct > 0 ? ` / ${ct.toFixed(2)} ct` : "";
+    if (shape) return `${shape} — ${qty} pcs${ctStr}`;
+    if (qty > 0) return `${qty} pcs${ctStr}`;
     return "—";
 }
 
@@ -176,8 +202,19 @@ async function saveTransferEntry(event) {
 
     if (itemType === "Polish") {
         const shapeName = document.getElementById("polish-shape-name").value;
-        const avail = getPolishAvailAtLocation(fromLocation);
+        const fromLocation = document.getElementById("from-location").value;
         const qty = parseInt(document.getElementById("polish-quantity").value) || 0;
+        const carat = parseFloat(document.getElementById("polish-carat").value) || 0;
+
+        let availPcs = 0;
+        let availCt = 0;
+        if (fromLocation === "Mumbai" && shapeName) {
+            const avail = getPolishShapeMumbaiAvail(shapeName);
+            availPcs = avail.pcs;
+            availCt = avail.carat;
+        } else {
+            availPcs = getPolishAvailAtLocation(fromLocation);
+        }
 
         if (!shapeName || !POLISH_SHAPE_OPTIONS.includes(shapeName)) {
             alert("Please select a valid shape from the list.");
@@ -187,13 +224,22 @@ async function saveTransferEntry(event) {
             alert("Transfer quantity must be greater than zero.");
             return;
         }
-        if (qty > avail) {
-            alert(`Insufficient stock! Maximum available in ${fromLocation} is ${avail} pcs.`);
+        if (carat <= 0) {
+            alert("Transfer carat must be greater than zero.");
+            return;
+        }
+        if (qty > availPcs) {
+            alert(`Insufficient stock! Maximum available in ${fromLocation} is ${availPcs} pcs.`);
+            return;
+        }
+        if (fromLocation === "Mumbai" && carat > availCt + 0.0001) {
+            alert(`Insufficient carat! Maximum available is ${availCt.toFixed(2)} ct.`);
             return;
         }
 
         newTransfer.shapeName = shapeName;
         newTransfer.quantity = qty;
+        newTransfer.carat = carat;
     } else {
         const container = document.getElementById("dabbi-list-container");
         const checked = container.querySelectorAll("input[type='checkbox']:checked");
@@ -215,6 +261,7 @@ async function saveTransferEntry(event) {
         document.getElementById("transfer-remarks").value = "";
         document.getElementById("polish-shape-name").value = "";
         document.getElementById("polish-quantity").value = "";
+        document.getElementById("polish-carat").value = "";
 
         setNextTransferNumber();
         populateSelections();

@@ -329,6 +329,7 @@ namespace backend.Controllers
                 DeadlineDays = input.DeadlineDays,
                 DeadlineDate = ToUtc(input.DeadlineDate),
                 LotId = input.LotId,
+                ShapeName = string.IsNullOrWhiteSpace(input.ShapeName) ? null : input.ShapeName.Trim().ToUpperInvariant(),
                 SourceLocation = input.SourceLocation,
                 IssueNo = input.IssueNo,
                 CreatedAt = DateTime.UtcNow,
@@ -544,7 +545,8 @@ namespace backend.Controllers
                 entity.Items.Add(new TransferItem
                 {
                     ShapeName = input.ShapeName.Trim().ToUpperInvariant(),
-                    Quantity = input.Quantity
+                    Quantity = input.Quantity,
+                    Carat = input.Carat
                 });
             }
             else if (input.ItemType == "Dabbi" && input.BoxIds != null)
@@ -717,6 +719,7 @@ namespace backend.Controllers
                         ItemType = item.Type,
                         ShapeName = item.Type == "Polish" ? item.ShapeName?.Trim().ToUpperInvariant() : null,
                         Quantity = item.Type == "Polish" ? item.Quantity : null,
+                        Carat = item.Type == "Polish" ? item.Carat : null,
                         BoxId = item.Type == "Dabbi" ? item.Id : null
                     });
                 }
@@ -764,6 +767,7 @@ namespace backend.Controllers
                         ItemType = item.Type,
                         ShapeName = item.Type == "Polish" ? item.ShapeName?.Trim().ToUpperInvariant() : null,
                         Quantity = item.Type == "Polish" ? item.Quantity : null,
+                        Carat = item.Type == "Polish" ? item.Carat : null,
                         BoxId = item.Type == "Dabbi" ? item.Id : null
                     });
                 }
@@ -949,6 +953,8 @@ namespace backend.Controllers
             entity.SellingDate = ToUtc(input.SellingDate);
             entity.Pieces = input.Pieces;
             entity.Carat = input.Carat;
+            if (!string.IsNullOrWhiteSpace(input.ShapeName))
+                entity.ShapeName = input.ShapeName.Trim().ToUpperInvariant();
             entity.CurrencyType = input.CurrencyType;
             entity.TotalDollar = input.TotalDollar;
             entity.DollarRate = input.DollarRate;
@@ -1188,6 +1194,7 @@ namespace backend.Controllers
             deadlineDate = s.DeadlineDate.ToString("yyyy-MM-dd"),
             payments = s.Payments.Select(MapPayment).ToList(),
             lotId = s.LotId,
+            shapeName = s.ShapeName ?? "",
             sourceLocation = s.SourceLocation,
             issueNo = s.IssueNo
         };
@@ -1270,7 +1277,8 @@ namespace backend.Controllers
                     toLocation = t.ToLocation,
                     remarks = t.Remarks,
                     shapeName = firstItem?.ShapeName ?? "",
-                    quantity = firstItem?.Quantity ?? 0
+                    quantity = firstItem?.Quantity ?? 0,
+                    carat = firstItem?.Carat.HasValue == true ? (double)firstItem.Carat.Value : (double?)null
                 };
             }
             else
@@ -1317,7 +1325,7 @@ namespace backend.Controllers
             {
                 if (item.ItemType == "Polish")
                 {
-                    return (object)new { type = "Polish", shapeName = item.ShapeName ?? item.PolishLotId ?? "", quantity = item.Quantity };
+                    return (object)new { type = "Polish", shapeName = item.ShapeName ?? item.PolishLotId ?? "", quantity = item.Quantity, carat = item.Carat.HasValue ? (double)item.Carat.Value : (double?)null };
                 }
                 else
                 {
@@ -1498,6 +1506,7 @@ namespace backend.Controllers
         public int DeadlineDays { get; set; }
         public DateTime DeadlineDate { get; set; }
         public string? LotId { get; set; }
+        public string? ShapeName { get; set; }
         public string SourceLocation { get; set; } = "Mumbai";
         public string? IssueNo { get; set; }
         public List<PaymentInput>? Payments { get; set; }
@@ -1576,6 +1585,7 @@ namespace backend.Controllers
         public string? Remarks { get; set; }
         public string? ShapeName { get; set; }
         public int Quantity { get; set; }
+        public decimal? Carat { get; set; }
         public List<string>? BoxIds { get; set; }
     }
 
@@ -1601,6 +1611,7 @@ namespace backend.Controllers
         public string? ShapeName { get; set; }
         public string? LotId { get; set; } // legacy
         public int Quantity { get; set; }
+        public decimal? Carat { get; set; }
         public string? Id { get; set; } // boxId
     }
 

@@ -132,8 +132,25 @@
                                     </div>
                                 </div>
                                 <div class="form-group-row">
-                                    <div class="form-control">
-                                        <label for="dalal">Dalal (Broker) <span class="required">*</span></label>
+                                    <div class="form-control flex-2">
+                                        <label for="sale-shape-name">Shape <span class="required">*</span></label>
+                                        <select id="sale-shape-name" required onchange="handleSaleShapeChange()">
+                                            <option value="">— Select Shape —</option>
+                                            <option value="FLOWER">Flower</option>
+                                            <option value="CALF">Calf</option>
+                                            <option value="MIX">Mix</option>
+                                            <option value="KITE">Kite</option>
+                                            <option value="M6">M6</option>
+                                            <option value="PIE CUT MIX">Pie cut mix</option>
+                                            <option value="TAY">Tay</option>
+                                            <option value="TAPPER">Tapper</option>
+                                            <option value="HEXA">Hexa</option>
+                                            <option value="LOZENGE">Lozenge</option>
+                                        </select>
+                                        <span class="field-hint" id="sale-shape-avail-hint">Select shape to see Mumbai stock</span>
+                                    </div>
+                                </div>
+                                <div class="form-group-row">
                                         <input type="text" id="dalal" required placeholder="Type to search dalal..." autocomplete="off">
                                     </div>
                                     <div class="form-control">

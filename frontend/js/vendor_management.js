@@ -199,17 +199,25 @@ function populateDabbiOptions() {
 function handleStageShapeChange() {
     const shapeName = document.getElementById("stage-shape-name").value;
     const availHint = document.getElementById("stage-avail-hint");
+    const caratHint = document.getElementById("stage-carat-hint");
     const qtyInput = document.getElementById("stage-qty");
+    const caratInput = document.getElementById("stage-carat");
 
-    const avail = shapeName ? getPolishShapeAvailInMumbai(shapeName, stagedItems) : 0;
-    availHint.textContent = `Avail in Mumbai: ${avail} pcs`;
-    qtyInput.max = avail;
+    const avail = shapeName ? getPolishShapeMumbaiAvail(shapeName, stagedItems) : { pcs: 0, carat: 0 };
+    availHint.textContent = `Avail in Mumbai: ${avail.pcs} pcs`;
+    if (caratHint) caratHint.textContent = `Avail: ${avail.carat.toFixed(2)} ct`;
+    qtyInput.max = avail.pcs;
 
     const qty = parseInt(qtyInput.value) || 0;
-    if (avail > 0 && qty > avail) {
-        qtyInput.value = avail;
-    } else if (avail === 0) {
+    if (avail.pcs > 0 && qty > avail.pcs) {
+        qtyInput.value = avail.pcs;
+    } else if (avail.pcs === 0) {
         qtyInput.value = "";
+    }
+
+    if (caratInput && avail.carat > 0) {
+        const ct = parseFloat(caratInput.value) || 0;
+        if (ct > avail.carat) caratInput.value = avail.carat.toFixed(3);
     }
 }
 
@@ -243,8 +251,10 @@ function addItemToStagedList() {
     if (type === "Polish") {
         const shapeName = document.getElementById("stage-shape-name").value;
         const qtyInput = document.getElementById("stage-qty");
+        const caratInput = document.getElementById("stage-carat");
         const qty = parseInt(qtyInput.value) || 0;
-        const avail = shapeName ? getPolishShapeAvailInMumbai(shapeName, stagedItems) : 0;
+        const carat = parseFloat(caratInput.value) || 0;
+        const avail = shapeName ? getPolishShapeMumbaiAvail(shapeName, stagedItems) : { pcs: 0, carat: 0 };
 
         if (!shapeName || !POLISH_SHAPE_OPTIONS.includes(shapeName)) {
             alert("Please select a valid shape from the list.");
@@ -254,21 +264,31 @@ function addItemToStagedList() {
             alert("Quantity must be greater than zero!");
             return;
         }
-        if (qty > avail) {
-            alert(`Insufficient ${formatPolishShapeLabel(shapeName)} stock in Mumbai! Max available is ${avail} pcs.`);
+        if (carat <= 0) {
+            alert("Carat must be greater than zero!");
+            return;
+        }
+        if (qty > avail.pcs) {
+            alert(`Insufficient ${formatPolishShapeLabel(shapeName)} stock in Mumbai! Max available is ${avail.pcs} pcs.`);
+            return;
+        }
+        if (carat > avail.carat + 0.0001) {
+            alert(`Insufficient carat in Mumbai! Max available is ${avail.carat.toFixed(2)} ct.`);
             return;
         }
 
         const existingIndex = stagedItems.findIndex(item => item.type === "Polish" && item.shapeName === shapeName);
         if (existingIndex !== -1) {
             stagedItems[existingIndex].quantity += qty;
-            stagedItems[existingIndex].label = `💎 ${formatPolishShapeLabel(shapeName)} (${stagedItems[existingIndex].quantity} pcs)`;
+            stagedItems[existingIndex].carat = (parseFloat(stagedItems[existingIndex].carat) || 0) + carat;
+            stagedItems[existingIndex].label = `💎 ${formatPolishShapeLabel(shapeName)} (${stagedItems[existingIndex].quantity} pcs / ${stagedItems[existingIndex].carat.toFixed(2)} ct)`;
         } else {
             stagedItems.push({
                 type: "Polish",
                 shapeName,
                 quantity: qty,
-                label: `💎 ${formatPolishShapeLabel(shapeName)} (${qty} pcs)`
+                carat,
+                label: `💎 ${formatPolishShapeLabel(shapeName)} (${qty} pcs / ${carat.toFixed(2)} ct)`
             });
         }
     } else {
@@ -362,7 +382,7 @@ async function saveInventoryIssue(event) {
         vendorName: vendor.name,
         items: stagedItems.map(item => {
             if (item.type === "Polish") {
-                return { type: "Polish", shapeName: item.shapeName, quantity: item.quantity };
+                return { type: "Polish", shapeName: item.shapeName, quantity: item.quantity, carat: item.carat };
             } else {
                 return { type: "Dabbi", id: item.id };
             }
@@ -456,7 +476,9 @@ function renderConsignments() {
             const itemText = document.createElement("span");
             if (item.type === "Polish") {
                 const shape = formatPolishShapeLabel(item.shapeName || item.lotId);
-                itemText.textContent = `💎 ${shape} — ${item.quantity} pcs`;
+                const ct = parseFloat(item.carat) || 0;
+                const ctStr = ct > 0 ? ` / ${ct.toFixed(2)} ct` : "";
+                itemText.textContent = `💎 ${shape} — ${item.quantity} pcs${ctStr}`;
             } else {
                 itemText.textContent = `📦 Box: ${item.id}`;
             }
@@ -560,7 +582,8 @@ function sellConsignedItem(issueNo, vendorName, itemToSell) {
     
     if (itemToSell.type === "Polish") {
         const shape = encodeURIComponent(itemToSell.shapeName || itemToSell.lotId || "");
-        const url = `polish_sales.html?vendor=${encodeURIComponent(vendorName)}&shapeName=${shape}&quantity=${itemToSell.quantity}&issueNo=${encodeURIComponent(issueNo)}`;
+        const carat = parseFloat(itemToSell.carat) || 0;
+        const url = `polish_sales.html?vendor=${encodeURIComponent(vendorName)}&shapeName=${shape}&quantity=${itemToSell.quantity}&carat=${carat}&issueNo=${encodeURIComponent(issueNo)}`;
         window.location.href = url;
     } else {
         const url = `box_selling.html?sourceLocation=Mumbai&vendor=${encodeURIComponent(vendorName)}&boxIds=${encodeURIComponent(itemToSell.id)}&issueNo=${encodeURIComponent(issueNo)}`;

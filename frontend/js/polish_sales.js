@@ -33,9 +33,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
         // Populate form next number
         setNextSellingNumber();
-        // Check for vendor prefill parameters
         parseUrlParamsAndPrefill();
-        // Trigger Initial Calculations
+        handleSaleShapeChange();
         toggleCurrencyMode();
         calculateFormPrices();
     }
@@ -63,6 +62,9 @@ function enterEditMode(no) {
     populateEntityDropdowns(entry.partyName, entry.dalal);
     document.getElementById("pieces").value = entry.pieces || "";
     document.getElementById("carat").value = entry.carat || "";
+    const shapeSel = document.getElementById("sale-shape-name");
+    if (shapeSel) shapeSel.value = (entry.shapeName || entry.lotId || "").toUpperCase();
+    handleSaleShapeChange();
 
     if (entry.currencyType === 'Dollar') {
         document.getElementById("currency-dollar").checked = true;
@@ -244,6 +246,36 @@ function setupRealTimeValidation() {
             clearFieldError(sellingNoInput);
         }
     });
+
+    document.getElementById("pieces")?.addEventListener("input", handleSaleShapeChange);
+    document.getElementById("carat")?.addEventListener("input", handleSaleShapeChange);
+}
+
+function handleSaleShapeChange() {
+    const shapeName = document.getElementById("sale-shape-name")?.value;
+    const hint = document.getElementById("sale-shape-avail-hint");
+    if (!hint) return;
+
+    if (!shapeName) {
+        hint.textContent = "Select shape to see available stock";
+        return;
+    }
+
+    const avail = getPolishShapeSaleAvailForValidation(shapeName, prefilledIssueNo, editSellingNo);
+    hint.textContent = `Available: ${avail.pcs} pcs / ${avail.carat.toFixed(2)} ct`;
+}
+
+function getPolishShapeSaleAvailForValidation(shapeName, issueNo, editingSaleNo) {
+    let avail = getPolishShapeSaleAvail(shapeName, issueNo);
+    if (editingSaleNo !== null) {
+        const orig = polishSalesList.find(s => parseInt(s.sellingNo) === editingSaleNo);
+        const origShape = (orig?.shapeName || orig?.lotId || "").toUpperCase();
+        if (orig && origShape === (shapeName || "").toUpperCase()) {
+            avail.pcs += parseInt(orig.pieces) || 0;
+            avail.carat += parseFloat(orig.carat) || 0;
+        }
+    }
+    return avail;
 }
 
 function showFieldError(input, message) {
@@ -311,6 +343,24 @@ function validateForm() {
         isValid = false;
     } else {
         clearFieldError(caratInput);
+    }
+
+    const shapeInput = document.getElementById("sale-shape-name");
+    const shapeName = shapeInput?.value?.trim().toUpperCase();
+    if (!shapeName || !POLISH_SHAPE_OPTIONS.includes(shapeName)) {
+        if (shapeInput) showFieldError(shapeInput, "Please select a valid shape.");
+        isValid = false;
+    } else {
+        if (shapeInput) clearFieldError(shapeInput);
+        const avail = getPolishShapeSaleAvailForValidation(shapeName, prefilledIssueNo, editSellingNo);
+        if (pieces > avail.pcs) {
+            showFieldError(piecesInput, `Exceeds available stock (${avail.pcs} pcs for ${formatPolishShapeLabel(shapeName)}).`);
+            isValid = false;
+        }
+        if (carat > avail.carat + 0.0001) {
+            showFieldError(caratInput, `Exceeds available carat (${avail.carat.toFixed(2)} ct).`);
+            isValid = false;
+        }
     }
     
     const dalalInput = document.getElementById("dalal");
@@ -462,6 +512,7 @@ async function saveSaleEntry(event) {
     const partyName = document.getElementById("party-name").value.trim();
     const pieces = parseInt(document.getElementById("pieces").value) || 1;
     const carat = parseFloat(document.getElementById("carat").value) || 0;
+    const shapeName = (document.getElementById("sale-shape-name")?.value || "").trim().toUpperCase();
     const currencyType = document.querySelector('input[name="currency-type"]:checked').value;
     
     let totalDollar = null;
@@ -568,7 +619,7 @@ async function saveSaleEntry(event) {
         }
     }
 
-    const lotId = prefilledLotId || "";
+    const lotId = prefilledLotId || shapeName || "";
 
     const newSale = {
         sellingNo,
@@ -577,6 +628,7 @@ async function saveSaleEntry(event) {
         partyName,
         pieces,
         carat,
+        shapeName,
         currencyType,
         totalDollar,
         dollarRate,
@@ -615,8 +667,8 @@ async function saveSaleEntry(event) {
         polishSalesList.push(newSale);
         await savePolishSaleOnServer(newSale);
 
-        if (prefilledIssueNo && lotId) {
-            await resolveVendorIssueOnSale(prefilledIssueNo, lotId, pieces);
+        if (prefilledIssueNo && shapeName) {
+            await resolveVendorIssueOnSale(prefilledIssueNo, shapeName, pieces);
         }
         
         // Redirect only when server confirms save
@@ -641,7 +693,12 @@ function parseUrlParamsAndPrefill() {
     }
 
     if (shapeName) {
-        prefilledLotId = shapeName; // reused field tracks shape for vendor consignment
+        const shapeSel = document.getElementById("sale-shape-name");
+        if (shapeSel) {
+            shapeSel.value = shapeName.toUpperCase();
+            if (issueNo) shapeSel.disabled = true;
+        }
+        prefilledLotId = shapeName;
     } else if (lotId) {
         prefilledLotId = lotId;
     }
@@ -649,12 +706,21 @@ function parseUrlParamsAndPrefill() {
     if (quantity) {
         const piecesInput = document.getElementById("pieces");
         piecesInput.value = quantity;
-        piecesInput.readOnly = true;
+        if (issueNo) piecesInput.readOnly = true;
+    }
+
+    const caratParam = params.get("carat");
+    if (caratParam) {
+        const caratInput = document.getElementById("carat");
+        caratInput.value = caratParam;
+        if (issueNo) caratInput.readOnly = true;
     }
 
     if (issueNo) {
         prefilledIssueNo = issueNo;
     }
+
+    handleSaleShapeChange();
 }
 
 async function resolveVendorIssueOnSale(issueNo, shapeOrLotId, quantity) {

@@ -167,7 +167,12 @@
                                     <div class="form-control">
                                         <label for="polish-quantity">Quantity (pcs) <span class="required">*</span></label>
                                         <input type="number" id="polish-quantity" min="1" placeholder="e.g. 100" oninput="handlePolishShapeChange()">
-                                        <span class="field-hint" id="polish-avail-hint">Available: 0</span>
+                                        <span class="field-hint" id="polish-avail-hint">Available: 0 pcs</span>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="polish-carat">Carat <span class="required">*</span></label>
+                                        <input type="number" id="polish-carat" min="0.001" step="0.001" placeholder="e.g. 12.50" oninput="handlePolishShapeChange()">
+                                        <span class="field-hint" id="polish-carat-hint">Available: 0.00 ct</span>
                                     </div>
                                 </div>
                             </div>

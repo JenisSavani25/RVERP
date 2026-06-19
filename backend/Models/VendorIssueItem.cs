@@ -30,6 +30,9 @@ namespace backend.Models
         [Column("quantity")]
         public int? Quantity { get; set; }
 
+        [Column("carat")]
+        public decimal? Carat { get; set; }
+
         [MaxLength(50)]
         [Column("box_id")]
         public string? BoxId { get; set; }

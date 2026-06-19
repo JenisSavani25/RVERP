@@ -15,7 +15,8 @@ public static class DatabaseSchemaBootstrap
     [
         "20260619121551_AddConversionDetailFields",
         "20260619125028_AddTransferShapeName",
-        "20260619130109_AddVendorIssueShapeName"
+        "20260619130109_AddVendorIssueShapeName",
+        "20260619134424_AddShapeCaratFields"
     ];
 
     private static readonly string[] IdempotentColumnSql =
@@ -25,7 +26,10 @@ public static class DatabaseSchemaBootstrap
         "ALTER TABLE conversions ADD COLUMN IF NOT EXISTS not_polished_pieces integer",
         "ALTER TABLE conversions ADD COLUMN IF NOT EXISTS not_polished_carat numeric",
         "ALTER TABLE transferitems ADD COLUMN IF NOT EXISTS shape_name character varying(100)",
-        "ALTER TABLE vendorissueitems ADD COLUMN IF NOT EXISTS shape_name character varying(100)"
+        "ALTER TABLE transferitems ADD COLUMN IF NOT EXISTS carat numeric",
+        "ALTER TABLE vendorissueitems ADD COLUMN IF NOT EXISTS shape_name character varying(100)",
+        "ALTER TABLE vendorissueitems ADD COLUMN IF NOT EXISTS carat numeric",
+        "ALTER TABLE polishsales ADD COLUMN IF NOT EXISTS shape_name character varying(100)"
     ];
 
     public static void Apply(ApplicationDbContext db)

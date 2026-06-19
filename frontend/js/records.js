@@ -709,7 +709,7 @@ function renderTransfersTab() {
         let searchStr = `${t.transferNo} ${t.itemType} ${t.fromLocation} ${t.toLocation} ${t.remarks || ''}`;
         
         if (t.itemType === 'Polish') {
-            details = `<strong>${(t.shapeName || 'Polish').toUpperCase()} — ${t.quantity || 0} pcs</strong>`;
+            details = `<strong>${(t.shapeName || 'Polish').toUpperCase()} — ${t.quantity || 0} pcs${t.carat ? ` / ${parseFloat(t.carat).toFixed(2)} ct` : ''}</strong>`;
             searchStr += ` ${t.shapeName || ''} ${t.quantity || ''}`;
         } else {
             const boxes = t.boxIds ? t.boxIds.join(", ") : "—";

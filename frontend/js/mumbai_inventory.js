@@ -5,63 +5,78 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderMumbaiInventory();
 });
 
+function fmtShapeQty(pcs, carat) {
+    const ct = parseFloat(carat) || 0;
+    return `${pcs} pcs / ${ct.toFixed(2)} ct`;
+}
+
 function renderMumbaiInventory() {
     const shapeStock = getPolishShapeStockDistribution();
     const dabbis = getDabbiStockDistribution();
 
-    // 1. Render Polish Inventory by shape category
     const polishTbody = document.getElementById("mumbai-polish-body");
     const polishEmpty = document.getElementById("mumbai-polish-empty");
     polishTbody.innerHTML = "";
 
     let totalMumbaiPolish = 0;
+    let totalMumbaiPolishCt = 0;
     let availMumbaiPolish = 0;
+    let availMumbaiPolishCt = 0;
     let issuedMumbaiPolish = 0;
+    let issuedMumbaiPolishCt = 0;
     let polishCount = 0;
 
-    // Always list all standard shape categories in fixed order
     POLISH_SHAPE_OPTIONS.forEach(shapeKey => {
         const row = shapeStock[shapeKey] || {
             shapeName: shapeKey,
             label: formatPolishShapeLabel(shapeKey),
             available: 0,
+            availableCarat: 0,
             vendor: 0,
-            total: 0
+            vendorCarat: 0,
+            total: 0,
+            totalCarat: 0
         };
 
         const inMumbai = row.available;
+        const inMumbaiCt = row.availableCarat || 0;
         const withVendor = row.vendor;
+        const withVendorCt = row.vendorCarat || 0;
         const total = row.total;
+        const totalCt = row.totalCarat || 0;
 
-        if (total > 0) polishCount++;
+        if (total > 0 || totalCt > 0) polishCount++;
         totalMumbaiPolish += total;
+        totalMumbaiPolishCt += totalCt;
         availMumbaiPolish += inMumbai;
+        availMumbaiPolishCt += inMumbaiCt;
         issuedMumbaiPolish += withVendor;
+        issuedMumbaiPolishCt += withVendorCt;
 
         const tr = document.createElement("tr");
-        if (total === 0) tr.className = "text-muted";
+        if (total === 0 && totalCt === 0) tr.className = "text-muted";
 
         const tdShape = document.createElement("td");
         tdShape.innerHTML = `<strong>${row.label}</strong>`;
 
         const tdTotal = document.createElement("td");
         tdTotal.className = "text-right";
-        tdTotal.textContent = `${total} pcs`;
+        tdTotal.textContent = fmtShapeQty(total, totalCt);
         tdTotal.style.fontWeight = total > 0 ? "600" : "400";
 
         const tdIssued = document.createElement("td");
         tdIssued.className = "text-right";
-        tdIssued.textContent = `${withVendor} pcs`;
+        tdIssued.textContent = fmtShapeQty(withVendor, withVendorCt);
         tdIssued.style.color = withVendor > 0 ? "#d97706" : "#94a3b8";
 
         const tdAvail = document.createElement("td");
         tdAvail.className = "text-right";
-        tdAvail.textContent = `${inMumbai} pcs`;
+        tdAvail.textContent = fmtShapeQty(inMumbai, inMumbaiCt);
         tdAvail.style.color = inMumbai > 0 ? "#16a34a" : "#94a3b8";
         tdAvail.style.fontWeight = inMumbai > 0 ? "600" : "400";
 
         const tdStatus = document.createElement("td");
-        if (total === 0) {
+        if (total === 0 && totalCt === 0) {
             tdStatus.innerHTML = `<span class="status-badge" style="background:#f1f5f9;color:#94a3b8;">No Stock</span>`;
         } else if (inMumbai > 0) {
             tdStatus.innerHTML = `<span class="status-badge available">Available</span>`;
@@ -84,7 +99,6 @@ function renderMumbaiInventory() {
         polishEmpty.classList.add("hidden");
     }
 
-    // 2. Render Dabbi Inventory
     const dabbiTbody = document.getElementById("mumbai-dabbi-body");
     const dabbiEmpty = document.getElementById("mumbai-dabbi-empty");
     dabbiTbody.innerHTML = "";
@@ -154,9 +168,9 @@ function renderMumbaiInventory() {
         dabbiEmpty.classList.add("hidden");
     }
 
-    // 3. Update Summary Widgets
     document.getElementById("sum-mumbai-polish").textContent = `${totalMumbaiPolish} pcs`;
-    document.getElementById("sum-mumbai-polish-detail").textContent = `${availMumbaiPolish} Available | ${issuedMumbaiPolish} Issued`;
+    document.getElementById("sum-mumbai-polish-detail").textContent =
+        `${availMumbaiPolish} pcs (${availMumbaiPolishCt.toFixed(2)} ct) Avail | ${issuedMumbaiPolish} pcs (${issuedMumbaiPolishCt.toFixed(2)} ct) Issued`;
 
     document.getElementById("sum-mumbai-dabbis").textContent = `${totalMumbaiDabbis} boxes`;
     document.getElementById("sum-mumbai-dabbis-detail").textContent = `${availMumbaiDabbis} Available | ${issuedMumbaiDabbis} Issued`;
