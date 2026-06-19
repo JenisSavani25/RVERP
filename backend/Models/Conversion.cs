@@ -20,6 +20,21 @@ namespace backend.Models
         [Column("polish_pieces")]
         public int PolishPieces { get; set; }
 
+        // Source Rough Buy this conversion was made from
+        [Column("rough_buying_no")]
+        public int? RoughBuyingNo { get; set; }
+
+        // Carat of polished diamonds produced
+        [Column("polished_carat")]
+        public decimal? PolishedCarat { get; set; }
+
+        // Diamonds that did not get polished (rejected / leftover)
+        [Column("not_polished_pieces")]
+        public int? NotPolishedPieces { get; set; }
+
+        [Column("not_polished_carat")]
+        public decimal? NotPolishedCarat { get; set; }
+
         [MaxLength(255)]
         [Column("remarks")]
         public string? Remarks { get; set; }

@@ -1,7 +1,9 @@
 // --- BOX SELLING ENTRY LOGIC ---
 
 let prefilledIssueNo = null;
-let prefilledSourceLocation = null;
+let prefilledSourceLocation = 'Mumbai';
+let editBoxSellNo = null;
+let editBoxEntry = null;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // INIT
@@ -12,23 +14,85 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadBoxSellingData();
     loadIssueData();
 
+    // Populate party/dalal dropdowns from master lists
+    populateEntityDropdowns();
+
     // Set today's date as default
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("selling-date").value = today;
 
-    // Parse URL parameters
-    parseUrlParams();
-
-    // Populate the Box checkboxes
-    populateBoxCheckboxList();
-
-    // Initial calc pass
-    toggleCurrencyMode();
-    calculateFormPrices();
-
     // Real-time validation
     setupRealTimeValidation();
+
+    const editParam = new URLSearchParams(window.location.search).get('edit');
+    if (editParam !== null && !isNaN(parseInt(editParam))) {
+        populateBoxCheckboxList();
+        enterEditMode(parseInt(editParam));
+    } else {
+        // Parse URL parameters
+        parseUrlParams();
+        // Populate the Box checkboxes
+        populateBoxCheckboxList();
+        // Initial calc pass
+        toggleCurrencyMode();
+        calculateFormPrices();
+    }
 });
+
+function enterEditMode(no) {
+    const entry = boxSellingList.find(s => parseInt(s.sellingNo) === no);
+    if (!entry) {
+        alert("Could not find Box Sale #" + no + " to edit. It may have been deleted.");
+        parseUrlParams();
+        toggleCurrencyMode();
+        calculateFormPrices();
+        return;
+    }
+    editBoxSellNo = no;
+    editBoxEntry = entry;
+
+    document.getElementById("selling-date").value = entry.sellingDate || "";
+    populateEntityDropdowns(entry.partyName, entry.dalal);
+
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("currency-dollar").checked = true;
+    } else {
+        document.getElementById("currency-rupees").checked = true;
+    }
+    toggleCurrencyMode();
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("total-dollar").value = entry.totalDollar || "";
+        document.getElementById("dollar-rate").value = entry.dollarRate || "";
+    } else {
+        document.getElementById("price").value = entry.price || "";
+    }
+
+    document.getElementById("discount").value = entry.discount || 0;
+    document.getElementById("dalali-pct").value = entry.dalali || 0;
+    document.getElementById("bill-percentage").value = entry.billPercentage || 0;
+    document.getElementById("deadline-days").value = entry.deadlineDays || 30;
+
+    // The box composition cannot change on edit; seed the fixed carat value
+    const caratInput = document.getElementById("box-carat-value");
+    if (caratInput) caratInput.value = entry.carat || 0;
+
+    const initType = document.getElementById("initial-payment-type");
+    if (initType) { initType.value = "Pending"; initType.disabled = true; }
+    const initRecv = document.getElementById("initial-received");
+    if (initRecv) { initRecv.value = 0; initRecv.disabled = true; }
+
+    const boxContainer = document.getElementById("box-list-container");
+    if (boxContainer) {
+        boxContainer.innerHTML = `<div class="text-muted" style="padding:10px;">Box composition cannot be changed when editing. Editing invoice details only.<br>Boxes in this sale: <strong>${entry.boxId || '—'}</strong></div>`;
+    }
+
+    calculateFormPrices();
+
+    const title = document.getElementById("page-title");
+    if (title) title.textContent = `Edit Box Sale #${entry.sellingNo}`;
+    const submitBtn = document.querySelector('#box-sell-form button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "💾 Update Box Sale Entry";
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PARSE URL PARAMS
@@ -37,44 +101,15 @@ function parseUrlParams() {
     const params = new URLSearchParams(window.location.search);
     
     const vendor = params.get("vendor");
-    const boxIdsParam = params.get("boxIds");
     const issueNo = params.get("issueNo");
-    const sourceLoc = params.get("sourceLocation");
 
     if (vendor) {
-        document.getElementById("dalal").value = vendor;
+        fillNameSelect("dalal", getDalalNameOptions(), vendor);
     }
     
     if (issueNo) {
         prefilledIssueNo = issueNo;
     }
-    
-    if (sourceLoc) {
-        prefilledSourceLocation = sourceLoc;
-        const select = document.getElementById("source-location-select");
-        if (select) {
-            let optExists = false;
-            for (let i = 0; i < select.options.length; i++) {
-                if (select.options[i].value === sourceLoc) {
-                    optExists = true;
-                    select.selectedIndex = i;
-                    break;
-                }
-            }
-            if (!optExists) {
-                const opt = document.createElement("option");
-                opt.value = sourceLoc;
-                opt.textContent = sourceLoc;
-                select.appendChild(opt);
-                select.value = sourceLoc;
-            }
-            select.disabled = true;
-        }
-    }
-}
-
-function onSourceLocationChange() {
-    populateBoxCheckboxList();
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -100,7 +135,7 @@ function populateBoxCheckboxList() {
         return;
     }
 
-    const selectedLoc = document.getElementById("source-location-select") ? document.getElementById("source-location-select").value : 'Surat';
+    const selectedLoc = 'Mumbai';
 
     // Sort boxes
     const sortedDabbiIds = Object.keys(dabbis).sort((a, b) => {
@@ -113,7 +148,7 @@ function populateBoxCheckboxList() {
         
         // Show if:
         // 1. It is prefilled from the URL (even if its status is 'Issued', since it's the one being sold)
-        // 2. Or, it is currently Available and is at the selected location
+        // 2. Or, it is currently Available and is in Mumbai (sales always from Mumbai)
         if (isPrefilled || (box.status === "Available" && box.location === selectedLoc)) {
             const row = document.createElement("div");
             row.className = "item-checkbox-row";
@@ -336,10 +371,10 @@ function calculateFormPrices() {
 function setupRealTimeValidation() {
     const numericInputs = [
         { id: "total-dollar",     integer: true },
-        { id: "dollar-rate",      integer: true },
+        { id: "dollar-rate",      decimals: 2 },
         { id: "price",            integer: true },
         { id: "discount",         decimals: 1, max: 100 },
-        { id: "dalali-pct",       decimals: 1, max: 100 },
+        { id: "dalali-pct",       decimals: 2, max: 100 },
         { id: "bill-percentage",  decimals: 1, max: 100 },
         { id: "initial-received", integer: true },
         { id: "deadline-days",    integer: true }
@@ -394,16 +429,18 @@ function clearFieldError(input) {
 function validateForm() {
     let isValid = true;
 
-    // Checkbox selections
-    const container = document.getElementById("box-list-container");
-    const checked = container.querySelectorAll("input[type='checkbox']:checked");
-    
-    if (checked.length === 0) {
-        container.style.borderColor = "var(--color-danger, #ef4444)";
-        alert("Please select at least one Dabbi box to sell.");
-        isValid = false;
-    } else {
-        container.style.borderColor = "#cbd5e1";
+    // Checkbox selections (skipped in edit mode — box composition is fixed)
+    if (editBoxSellNo === null) {
+        const container = document.getElementById("box-list-container");
+        const checked = container.querySelectorAll("input[type='checkbox']:checked");
+
+        if (checked.length === 0) {
+            container.style.borderColor = "var(--color-danger, #ef4444)";
+            alert("Please select at least one Dabbi box to sell.");
+            isValid = false;
+        } else {
+            container.style.borderColor = "#cbd5e1";
+        }
     }
 
     // Selling Date
@@ -517,6 +554,11 @@ async function saveBoxSellEntry(event) {
 
     if (!validateForm()) {
         alert("Please fix all highlighted errors before saving.");
+        return;
+    }
+
+    if (editBoxSellNo !== null) {
+        await saveBoxSaleEdit();
         return;
     }
 
@@ -667,8 +709,7 @@ async function saveBoxSellEntry(event) {
             shape2: dabbis[selectedBoxIds[0]].shape2, carat: dabbis[selectedBoxIds[0]].carat,
             mPrice: dabbis[selectedBoxIds[0]].mPrice, mValue: dabbis[selectedBoxIds[0]].mValue
         } : null,
-        issueNo: prefilledIssueNo,
-        sourceLocation: document.getElementById("source-location-select") ? document.getElementById("source-location-select").value : (prefilledSourceLocation || 'Surat')
+        issueNo: prefilledIssueNo
     };
 
     try {
@@ -680,10 +721,87 @@ async function saveBoxSellEntry(event) {
             await resolveVendorIssueOnSale(prefilledIssueNo, selectedBoxIds);
         }
 
-        window.location.href = "index.html";
+        window.location.href = "mumbai_inventory.html";
     } catch (e) {
         boxSellingList = boxSellingList.filter(item => item.sellingNo !== newEntry.sellingNo);
         alert("Could not save this box sale entry.\n\n" + e.message);
+    }
+}
+
+// Edit path for box sales: invoice/financial fields change, box composition stays fixed.
+async function saveBoxSaleEdit() {
+    const entry = editBoxEntry;
+    const items = (entry.items || []).map(it => ({
+        boxId: it.boxId, carat: it.carat, mPrice: it.mPrice, mValue: it.mValue
+    }));
+    const carat = entry.carat || items.reduce((s, i) => s + (i.carat || 0), 0);
+
+    const sellingDate = document.getElementById("selling-date").value;
+    const dalal       = document.getElementById("dalal").value.trim();
+    const partyName   = document.getElementById("party-name").value.trim();
+    const isDollar    = document.getElementById("currency-dollar").checked;
+
+    let price = 0, totalDollar = null, dollarRate = null;
+    if (isDollar) {
+        totalDollar = parseFloat(document.getElementById("total-dollar").value) || 0;
+        dollarRate  = parseFloat(document.getElementById("dollar-rate").value)  || 0;
+        price       = calculatePrice(totalDollar, dollarRate);
+    } else {
+        price = parseFloat(document.getElementById("price").value) || 0;
+    }
+
+    const totalPrice     = calculateTotalPrice(carat, price);
+    const discount       = parseFloat(document.getElementById("discount").value) || 0;
+    const discountAmount = calculateDiscountAmount(totalPrice, discount);
+    const discountedAmt  = calculateDiscountedAmount(totalPrice, discountAmount);
+    const dalaliPct      = parseFloat(document.getElementById("dalali-pct").value) || 0;
+    const dalaliAmount   = calculateDalaliAmount(discountedAmt, dalaliPct);
+    const billPct        = parseFloat(document.getElementById("bill-percentage").value) || 0;
+    const billAmount     = calculateBillAmount(discountedAmt, billPct);
+    const cashAmount     = calculateCashAmount(discountedAmt, billAmount);
+    const gst            = calculateGST(billAmount, 0.015);
+    const netBillAmt     = calculateNetBillAmount(billAmount, gst);
+    const netCashAmt     = cashAmount;
+    const finalAmount    = calculateFinalAmount(netBillAmt, netCashAmt, dalaliAmount);
+    const deadlineDays   = parseInt(document.getElementById("deadline-days").value) || 30;
+    const deadlineDate   = calculateDeadlineDate(sellingDate, deadlineDays);
+
+    const newEntry = {
+        sellingNo: editBoxSellNo,
+        items,
+        totalCarat: carat,
+        sellingDate,
+        dalal,
+        partyName,
+        currencyType: isDollar ? "Dollar" : "Rupees",
+        totalDollar,
+        dollarRate,
+        price,
+        carat,
+        totalPrice,
+        discount,
+        discountedAmount: discountedAmt,
+        dalali: dalaliPct,
+        dalaliAmount,
+        billPercentage: billPct,
+        billAmount,
+        cashAmount,
+        gst,
+        netBillAmount: netBillAmt,
+        netCashAmount: netCashAmt,
+        finalAmount,
+        deadlineDays,
+        deadlineDate,
+        payments: entry.payments || [],
+        boxId: entry.boxId,
+        issueNo: entry.issueNo || null
+    };
+
+    try {
+        await updateBoxSaleOnServer(editBoxSellNo, newEntry);
+        window.location.href = "records.html";
+    } catch (e) {
+        alert("Could not update this box sale entry.\n\n" + e.message);
     }
 }
 

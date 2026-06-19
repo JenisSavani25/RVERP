@@ -42,14 +42,11 @@
                     <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
                         <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-conversion" onclick="window.location.href='conversion.html'">
+                        <span class="nav-icon">⚗️</span><span class="nav-label">Rough → Polish</span>
+                    </li>
                     <li class="sub-nav-item active" id="nav-box-making" onclick="window.location.href='box_making.html'">
                         <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
-                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
-                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
                     </li>
                     <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
                         <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
@@ -59,11 +56,24 @@
                     <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
                         <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+
                     <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
                         <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
                     </li>
                     
-                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <div class="nav-group-header">🗃️ Master Data</div>
+                    <li class="sub-nav-item" id="nav-party-master" onclick="window.location.href='party_master.html'">
+                        <span class="nav-icon">👥</span><span class="nav-label">Party Master</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-master" onclick="window.location.href='vendor_master.html'">
+                        <span class="nav-icon">🏪</span><span class="nav-label">Vendor Master</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
                         <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
                     </li>
@@ -156,20 +166,20 @@
                                     </div>
 
                                     <div class="form-control">
-                                        <label for="color">Color <span class="required">*</span></label>
+                                        <label for="color">Color</label>
                                         <input type="text" id="color" placeholder="e.g. G+, D, F-G" oninput="updatePreviewBar()">
                                         <span class="field-hint">Colour grade</span>
                                     </div>
 
                                     <div class="form-control">
-                                        <label for="purity">Purity <span class="required">*</span></label>
+                                        <label for="purity">Purity</label>
                                         <input type="text" id="purity" placeholder="e.g. VVS-VS, VS1, SI" oninput="updatePreviewBar()">
                                         <span class="field-hint">Clarity / purity grade</span>
                                     </div>
                                 </div>
                                 <div class="form-group-row">
                                     <div class="form-control">
-                                        <label for="mm">MM (Measurements) <span class="required">*</span></label>
+                                        <label for="mm">MM (Measurements)</label>
                                         <input type="text" id="mm" placeholder="e.g. 510X435, 4.5X3.2" oninput="updatePreviewBar()">
                                         <span class="field-hint">Length × Width dimensions</span>
                                     </div>

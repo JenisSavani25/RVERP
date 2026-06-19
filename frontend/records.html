@@ -39,14 +39,11 @@
                     <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
                         <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-conversion" onclick="window.location.href='conversion.html'">
+                        <span class="nav-icon">⚗️</span><span class="nav-label">Rough → Polish</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
                         <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
-                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
-                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
                     </li>
                     <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
                         <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
@@ -56,11 +53,24 @@
                     <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
                         <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+
                     <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
                         <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
                     </li>
                     
-                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <div class="nav-group-header">🗃️ Master Data</div>
+                    <li class="sub-nav-item" id="nav-party-master" onclick="window.location.href='party_master.html'">
+                        <span class="nav-icon">👥</span><span class="nav-label">Party Master</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-master" onclick="window.location.href='vendor_master.html'">
+                        <span class="nav-icon">🏪</span><span class="nav-label">Vendor Master</span>
+                    </li>
                     <li class="sub-nav-item active" id="nav-records" onclick="window.location.href='records.html'">
                         <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
                     </li>
@@ -128,10 +138,10 @@
                     <span class="rec-tab-icon">🔄</span> Transfer Records
                     <span class="rec-tab-badge" id="cnt-transfers">0</span>
                 </button>
-                <button class="rec-tab" data-tab="vendors"
-                        onclick="switchTab('vendors',this)">
-                    <span class="rec-tab-icon">🤝</span> Vendor Records
-                    <span class="rec-tab-badge" id="cnt-vendors">0</span>
+                <button class="rec-tab" data-tab="conversions"
+                        onclick="switchTab('conversions',this)">
+                    <span class="rec-tab-icon">⚗️</span> Conversions
+                    <span class="rec-tab-badge" id="cnt-conversions">0</span>
                 </button>
             </div>
 
@@ -142,8 +152,8 @@
             <div id="panel-polish-sale" class="rec-panel"></div>
             <div id="panel-box-making"  class="rec-panel"></div>
             <div id="panel-box-selling" class="rec-panel"></div>
-            <div id="panel-transfers"   class="rec-panel"></div>
-            <div id="panel-vendors"     class="rec-panel"></div>
+            <div id="panel-transfers"    class="rec-panel"></div>
+            <div id="panel-conversions"  class="rec-panel"></div>
 
         </main>
     </div>

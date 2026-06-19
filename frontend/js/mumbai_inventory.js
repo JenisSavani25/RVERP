@@ -6,10 +6,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function renderMumbaiInventory() {
-    const polishLots = getPolishStockDistribution();
+    const shapeStock = getPolishShapeStockDistribution();
     const dabbis = getDabbiStockDistribution();
 
-    // 1. Render Polish Inventory
+    // 1. Render Polish Inventory by shape category
     const polishTbody = document.getElementById("mumbai-polish-body");
     const polishEmpty = document.getElementById("mumbai-polish-empty");
     polishTbody.innerHTML = "";
@@ -19,59 +19,63 @@ function renderMumbaiInventory() {
     let issuedMumbaiPolish = 0;
     let polishCount = 0;
 
-    // Sort lots by lotId
-    const sortedLotIds = Object.keys(polishLots).sort((a, b) => {
-        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-    });
+    // Always list all standard shape categories in fixed order
+    POLISH_SHAPE_OPTIONS.forEach(shapeKey => {
+        const row = shapeStock[shapeKey] || {
+            shapeName: shapeKey,
+            label: formatPolishShapeLabel(shapeKey),
+            available: 0,
+            vendor: 0,
+            total: 0
+        };
 
-    sortedLotIds.forEach(lotId => {
-        const lot = polishLots[lotId];
-        const inMumbai = lot.Mumbai || 0;
-        const withVendor = lot.Vendor || 0;
-        const total = inMumbai + withVendor;
+        const inMumbai = row.available;
+        const withVendor = row.vendor;
+        const total = row.total;
 
-        if (total > 0) {
-            totalMumbaiPolish += total;
-            availMumbaiPolish += inMumbai;
-            issuedMumbaiPolish += withVendor;
-            polishCount++;
+        if (total > 0) polishCount++;
+        totalMumbaiPolish += total;
+        availMumbaiPolish += inMumbai;
+        issuedMumbaiPolish += withVendor;
 
-            const tr = document.createElement("tr");
+        const tr = document.createElement("tr");
+        if (total === 0) tr.className = "text-muted";
 
-            const tdLot = document.createElement("td");
-            tdLot.innerHTML = `<strong>Polish Diamonds</strong>`;
+        const tdShape = document.createElement("td");
+        tdShape.innerHTML = `<strong>${row.label}</strong>`;
 
-            const tdTotal = document.createElement("td");
-            tdTotal.className = "text-right";
-            tdTotal.textContent = `${total} pcs`;
-            tdTotal.style.fontWeight = "600";
+        const tdTotal = document.createElement("td");
+        tdTotal.className = "text-right";
+        tdTotal.textContent = `${total} pcs`;
+        tdTotal.style.fontWeight = total > 0 ? "600" : "400";
 
-            const tdIssued = document.createElement("td");
-            tdIssued.className = "text-right";
-            tdIssued.textContent = `${withVendor} pcs`;
-            tdIssued.style.color = withVendor > 0 ? "#d97706" : "#64748b";
+        const tdIssued = document.createElement("td");
+        tdIssued.className = "text-right";
+        tdIssued.textContent = `${withVendor} pcs`;
+        tdIssued.style.color = withVendor > 0 ? "#d97706" : "#94a3b8";
 
-            const tdAvail = document.createElement("td");
-            tdAvail.className = "text-right";
-            tdAvail.textContent = `${inMumbai} pcs`;
-            tdAvail.style.color = inMumbai > 0 ? "#16a34a" : "#64748b";
-            tdAvail.style.fontWeight = "600";
+        const tdAvail = document.createElement("td");
+        tdAvail.className = "text-right";
+        tdAvail.textContent = `${inMumbai} pcs`;
+        tdAvail.style.color = inMumbai > 0 ? "#16a34a" : "#94a3b8";
+        tdAvail.style.fontWeight = inMumbai > 0 ? "600" : "400";
 
-            const tdStatus = document.createElement("td");
-            if (inMumbai > 0) {
-                tdStatus.innerHTML = `<span class="status-badge available">Available</span>`;
-            } else {
-                tdStatus.innerHTML = `<span class="status-badge issued">Fully Issued</span>`;
-            }
-
-            tr.appendChild(tdLot);
-            tr.appendChild(tdTotal);
-            tr.appendChild(tdIssued);
-            tr.appendChild(tdAvail);
-            tr.appendChild(tdStatus);
-
-            polishTbody.appendChild(tr);
+        const tdStatus = document.createElement("td");
+        if (total === 0) {
+            tdStatus.innerHTML = `<span class="status-badge" style="background:#f1f5f9;color:#94a3b8;">No Stock</span>`;
+        } else if (inMumbai > 0) {
+            tdStatus.innerHTML = `<span class="status-badge available">Available</span>`;
+        } else {
+            tdStatus.innerHTML = `<span class="status-badge issued">Fully Issued</span>`;
         }
+
+        tr.appendChild(tdShape);
+        tr.appendChild(tdTotal);
+        tr.appendChild(tdIssued);
+        tr.appendChild(tdAvail);
+        tr.appendChild(tdStatus);
+
+        polishTbody.appendChild(tr);
     });
 
     if (polishCount === 0) {
@@ -90,15 +94,12 @@ function renderMumbaiInventory() {
     let issuedMumbaiDabbis = 0;
     let dabbiCount = 0;
 
-    // Sort boxes by boxId
     const sortedDabbiIds = Object.keys(dabbis).sort((a, b) => {
         return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
     });
 
     sortedDabbiIds.forEach(boxId => {
         const box = dabbis[boxId];
-        
-        // Show if physically in Mumbai or issued to a vendor from Mumbai
         const inMumbai = box.location === "Mumbai";
         const withVendor = box.location === "Vendor";
 

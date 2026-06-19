@@ -1,24 +1,79 @@
 // --- ROUGH SALES ENTRY LOGIC ---
 
+let editSellingNo = null;
+
 document.addEventListener("DOMContentLoaded", async () => {
     await loadAllDataFromServer();
     // Load shared data
     loadSalesData();
+
+    // Populate party/dalal dropdowns from master lists
+    populateEntityDropdowns();
     
     // Set Default Form Date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("selling-date").value = today;
-    
-    // Populate form next number
-    setNextSellingNumber();
-
-    // Trigger Initial Calculations
-    toggleCurrencyMode();
-    calculateFormPrices();
 
     // Add real-time event listeners to validate values
     setupRealTimeValidation();
+
+    const editParam = new URLSearchParams(window.location.search).get('edit');
+    if (editParam !== null && !isNaN(parseInt(editParam))) {
+        enterEditMode(parseInt(editParam));
+    } else {
+        setNextSellingNumber();
+        toggleCurrencyMode();
+        calculateFormPrices();
+    }
 });
+
+function enterEditMode(no) {
+    const entry = salesList.find(s => parseInt(s.sellingNo) === no);
+    if (!entry) {
+        alert("Could not find Rough Sale #" + no + " to edit. It may have been deleted.");
+        setNextSellingNumber();
+        toggleCurrencyMode();
+        calculateFormPrices();
+        return;
+    }
+    editSellingNo = no;
+
+    document.getElementById("selling-no").value = entry.sellingNo;
+    document.getElementById("selling-no").readOnly = true;
+    document.getElementById("selling-date").value = entry.sellingDate || "";
+    populateEntityDropdowns(entry.partyName, entry.dalal);
+    document.getElementById("pieces").value = entry.pieces || "";
+    document.getElementById("carat").value = entry.carat || "";
+
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("currency-dollar").checked = true;
+    } else {
+        document.getElementById("currency-rupees").checked = true;
+    }
+    toggleCurrencyMode();
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("total-dollar").value = entry.totalDollar || "";
+        document.getElementById("dollar-rate").value = entry.dollarRate || "";
+    } else {
+        document.getElementById("price").value = entry.price || "";
+    }
+
+    document.getElementById("discount").value = entry.discount || 0;
+    document.getElementById("bill-percentage").value = entry.billPercentage || 0;
+    document.getElementById("deadline-days").value = entry.deadlineDays || 0;
+
+    const initType = document.getElementById("initial-payment-type");
+    if (initType) { initType.value = "Pending"; initType.disabled = true; }
+    const initRecv = document.getElementById("initial-received");
+    if (initRecv) { initRecv.value = 0; initRecv.disabled = true; }
+
+    calculateFormPrices();
+
+    const title = document.getElementById("page-title");
+    if (title) title.textContent = `Edit Rough Sale #${entry.sellingNo}`;
+    const submitBtn = document.querySelector('#sale-form button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Update Sale Entry";
+}
 
 function setNextSellingNumber() {
     const maxNo = salesList.reduce((max, sale) => Math.max(max, parseInt(sale.sellingNo) || 0), 0);
@@ -121,7 +176,7 @@ function setupRealTimeValidation() {
         { id: "pieces", integer: true },
         { id: "carat", decimals: 3 },
         { id: "total-dollar", integer: true },
-        { id: "dollar-rate", integer: true },
+        { id: "dollar-rate", decimals: 2 },
         { id: "price", integer: true },
         { id: "discount", decimals: 1, max: 100 },
         { id: "bill-percentage", decimals: 1, max: 100 },
@@ -206,7 +261,7 @@ function validateForm() {
     if (isNaN(sellingNo) || sellingNo <= 0) {
         showFieldError(sellingNoInput, "Selling Number must be a positive integer.");
         isValid = false;
-    } else if (salesList.some(sale => sale.sellingNo === sellingNo)) {
+    } else if (editSellingNo === null && salesList.some(sale => sale.sellingNo === sellingNo)) {
         showFieldError(sellingNoInput, "Selling Number already exists.");
         isValid = false;
     } else {
@@ -489,9 +544,14 @@ async function saveSaleEntry(event) {
     };
 
     try {
-        await saveRoughSaleOnServer(newSale);
-        // Redirect only when server confirms save
-        window.location.href = "index.html";
+        if (editSellingNo !== null) {
+            await updateRoughSaleOnServer(editSellingNo, newSale);
+            window.location.href = "records.html";
+        } else {
+            await saveRoughSaleOnServer(newSale);
+            // Redirect only when server confirms save
+            window.location.href = "index.html";
+        }
     } catch (e) {
         alert("Could not save this rough sale entry.\n\n" + e.message);
     }

@@ -1,24 +1,79 @@
 // --- POLISH BUYS ENTRY LOGIC ---
 
+let editBuyingNo = null;
+
 document.addEventListener("DOMContentLoaded", async () => {
     await loadAllDataFromServer();
     // Load shared data
     loadPolishBuysData();
+
+    // Populate party/dalal dropdowns from master lists
+    populateEntityDropdowns();
     
     // Set Default Form Date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("buying-date").value = today;
-    
-    // Populate form next number
-    setNextBuyingNumber();
-
-    // Trigger Initial Calculations
-    toggleCurrencyMode();
-    calculateFormPrices();
 
     // Add real-time event listeners to validate values
     setupRealTimeValidation();
+
+    const editParam = new URLSearchParams(window.location.search).get('edit');
+    if (editParam !== null && !isNaN(parseInt(editParam))) {
+        enterEditMode(parseInt(editParam));
+    } else {
+        setNextBuyingNumber();
+        toggleCurrencyMode();
+        calculateFormPrices();
+    }
 });
+
+function enterEditMode(no) {
+    const entry = polishBuysList.find(b => parseInt(b.buyingNo) === no);
+    if (!entry) {
+        alert("Could not find Polish Buy #" + no + " to edit. It may have been deleted.");
+        setNextBuyingNumber();
+        toggleCurrencyMode();
+        calculateFormPrices();
+        return;
+    }
+    editBuyingNo = no;
+
+    document.getElementById("buying-no").value = entry.buyingNo;
+    document.getElementById("buying-no").readOnly = true;
+    document.getElementById("buying-date").value = entry.buyingDate || "";
+    populateEntityDropdowns(entry.partyName, entry.dalal);
+    document.getElementById("pieces").value = entry.pieces || "";
+    document.getElementById("carat").value = entry.carat || "";
+
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("currency-dollar").checked = true;
+    } else {
+        document.getElementById("currency-rupees").checked = true;
+    }
+    toggleCurrencyMode();
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("total-dollar").value = entry.totalDollar || "";
+        document.getElementById("dollar-rate").value = entry.dollarRate || "";
+    } else {
+        document.getElementById("price").value = entry.price || "";
+    }
+
+    document.getElementById("discount").value = entry.discount || 0;
+    document.getElementById("bill-percentage").value = entry.billPercentage || 0;
+    document.getElementById("deadline-days").value = entry.deadlineDays || 0;
+
+    const initType = document.getElementById("initial-payment-type");
+    if (initType) { initType.value = "Pending"; initType.disabled = true; }
+    const initRecv = document.getElementById("initial-received");
+    if (initRecv) { initRecv.value = 0; initRecv.disabled = true; }
+
+    calculateFormPrices();
+
+    const title = document.getElementById("page-title");
+    if (title) title.textContent = `Edit Polish Buy #${entry.buyingNo}`;
+    const submitBtn = document.querySelector('#buy-form button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Update Buy Entry";
+}
 
 function setNextBuyingNumber() {
     const maxNo = polishBuysList.reduce((max, buy) => Math.max(max, parseInt(buy.buyingNo) || 0), 0);
@@ -116,7 +171,7 @@ function setupRealTimeValidation() {
         { id: "pieces", integer: true },
         { id: "carat", decimals: 3 },
         { id: "total-dollar", integer: true },
-        { id: "dollar-rate", integer: true },
+        { id: "dollar-rate", decimals: 2 },
         { id: "price", integer: true },
         { id: "discount", decimals: 1, max: 100 },
         { id: "bill-percentage", decimals: 1, max: 100 },
@@ -195,7 +250,7 @@ function validateForm() {
     if (isNaN(buyingNo) || buyingNo <= 0) {
         showFieldError(buyingNoInput, "Buying Number must be a positive integer.");
         isValid = false;
-    } else if (polishBuysList.some(buy => buy.buyingNo === buyingNo)) {
+    } else if (editBuyingNo === null && polishBuysList.some(buy => buy.buyingNo === buyingNo)) {
         showFieldError(buyingNoInput, "Buying Number already exists.");
         isValid = false;
     } else {
@@ -462,9 +517,14 @@ async function saveBuyEntry(event) {
     };
 
     try {
-        await savePolishLotOnServer(newBuy);
-        // Redirect only when server confirms save
-        window.location.href = "index.html";
+        if (editBuyingNo !== null) {
+            await updatePolishLotOnServer(editBuyingNo, newBuy);
+            window.location.href = "records.html";
+        } else {
+            await savePolishLotOnServer(newBuy);
+            // Redirect only when server confirms save
+            window.location.href = "index.html";
+        }
     } catch (e) {
         alert("Could not save this polish buy entry.\n\n" + e.message);
     }

@@ -9,7 +9,118 @@ let conversionList = [];
 let transfersList = [];
 let vendorsList = [];
 let issuesList = [];
+let partiesList = [];
+
+// Polish shapes used in Surat → Mumbai transfers and vendor consignment
+const POLISH_SHAPE_OPTIONS = [
+    "FLOWER", "CALF", "MIX", "KITE", "M6", "PIE CUT MIX", "TAY", "TAPPER", "HEXA", "LOZENGE"
+];
+
+const POLISH_SHAPE_LABELS = {
+    "FLOWER": "Flower",
+    "CALF": "Calf",
+    "MIX": "Mix",
+    "KITE": "Kite",
+    "M6": "M6",
+    "PIE CUT MIX": "Pie cut mix",
+    "TAY": "Tay",
+    "TAPPER": "Tapper",
+    "HEXA": "Hexa",
+    "LOZENGE": "Lozenge"
+};
+
+function formatPolishShapeLabel(shape) {
+    const key = (shape || "").trim().toUpperCase();
+    return POLISH_SHAPE_LABELS[key] || key || "—";
+}
+
+/** Mumbai polish stock for a shape (from transfers minus pending vendor issues). */
+function getPolishShapeAvailInMumbai(shapeName, extraStaged = []) {
+    const shape = (shapeName || "").trim().toUpperCase();
+    if (!shape) return 0;
+
+    loadTransferData();
+    loadIssueData();
+
+    let qty = 0;
+
+    transfersList.forEach(t => {
+        if (t.itemType !== "Polish") return;
+        if ((t.shapeName || "").toUpperCase() !== shape) return;
+        const q = parseInt(t.quantity) || 0;
+        if (t.toLocation === "Mumbai") qty += q;
+        if (t.fromLocation === "Mumbai") qty -= q;
+    });
+
+    issuesList.forEach(iss => {
+        if (iss.status !== "Pending") return;
+        iss.items.forEach(item => {
+            if (item.type !== "Polish") return;
+            const s = (item.shapeName || item.lotId || "").toUpperCase();
+            if (s !== shape) return;
+            qty -= parseInt(item.quantity) || 0;
+        });
+    });
+
+    extraStaged.forEach(item => {
+        if (item.type !== "Polish") return;
+        if ((item.shapeName || "").toUpperCase() !== shape) return;
+        qty -= parseInt(item.quantity) || 0;
+    });
+
+    return Math.max(0, qty);
+}
+
+/** Per-shape Mumbai polish stock (from transfers + vendor consignments). */
+function getPolishShapeStockDistribution() {
+    loadTransferData();
+    loadIssueData();
+
+    const shapes = {};
+    POLISH_SHAPE_OPTIONS.forEach(s => {
+        shapes[s] = { shapeName: s, label: formatPolishShapeLabel(s), available: 0, vendor: 0, total: 0 };
+    });
+
+    const ensureShape = (raw) => {
+        const key = (raw || "").trim().toUpperCase();
+        if (!key) return null;
+        if (!shapes[key]) {
+            shapes[key] = { shapeName: key, label: formatPolishShapeLabel(key), available: 0, vendor: 0, total: 0 };
+        }
+        return shapes[key];
+    };
+
+    transfersList.forEach(t => {
+        if (t.itemType !== "Polish") return;
+        const s = ensureShape(t.shapeName || t.lotId);
+        if (!s) return;
+        const q = parseInt(t.quantity) || 0;
+        if (t.toLocation === "Mumbai") s.available += q;
+        if (t.fromLocation === "Mumbai") s.available -= q;
+    });
+
+    issuesList.forEach(iss => {
+        if (iss.status !== "Pending") return;
+        iss.items.forEach(item => {
+            if (item.type !== "Polish") return;
+            const s = ensureShape(item.shapeName || item.lotId);
+            if (!s) return;
+            const q = parseInt(item.quantity) || 0;
+            s.vendor += q;
+            s.available -= q;
+        });
+    });
+
+    Object.values(shapes).forEach(s => {
+        s.available = Math.max(0, s.available);
+        s.total = s.available + s.vendor;
+    });
+
+    return shapes;
+}
 let isLoadedFromServer = false;
+const ALL_DATA_CACHE_KEY = "rv_gems_all_data_cache_v1";
+const ALL_DATA_CACHE_TTL_MS = 120000; // 2 minutes
 let API_BASE_URL = localStorage.getItem("rv_gems_api_url");
 if (!API_BASE_URL) {
     API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
@@ -17,23 +128,66 @@ if (!API_BASE_URL) {
         : 'https://rv-gems-backend.onrender.com/api/ERP'; // Default production URL
 }
 
+function applyServerState(data) {
+    salesList = data.salesList || [];
+    buysList = data.buysList || [];
+    polishSalesList = data.polishSalesList || [];
+    polishBuysList = data.polishBuysList || [];
+    boxMakingList = data.boxMakingList || [];
+    boxSellingList = data.boxSellingList || [];
+    conversionList = data.conversionList || [];
+    transfersList = data.transfersList || [];
+    vendorsList = data.vendorsList || [];
+    issuesList = data.issuesList || [];
+    partiesList = data.partiesList || [];
+    isLoadedFromServer = true;
+}
+
+function readCachedServerState() {
+    try {
+        const raw = sessionStorage.getItem(ALL_DATA_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.savedAt || !parsed.data) return null;
+        if ((Date.now() - parsed.savedAt) > ALL_DATA_CACHE_TTL_MS) return null;
+        return parsed.data;
+    } catch {
+        return null;
+    }
+}
+
+function writeCachedServerState(data) {
+    try {
+        sessionStorage.setItem(ALL_DATA_CACHE_KEY, JSON.stringify({
+            savedAt: Date.now(),
+            data
+        }));
+    } catch {
+        // Ignore storage quota/private mode errors
+    }
+}
+
+function invalidateServerStateCache() {
+    try {
+        sessionStorage.removeItem(ALL_DATA_CACHE_KEY);
+    } catch {
+        // Ignore
+    }
+}
+
 async function loadAllDataFromServer() {
     if (isLoadedFromServer) return;
+    const cachedData = readCachedServerState();
+    if (cachedData) {
+        applyServerState(cachedData);
+        return;
+    }
     try {
         const response = await fetch(`${API_BASE_URL}/all-data`);
         if (!response.ok) throw new Error("HTTP error! status: " + response.status);
         const data = await response.json();
-        salesList = data.salesList || [];
-        buysList = data.buysList || [];
-        polishSalesList = data.polishSalesList || [];
-        polishBuysList = data.polishBuysList || [];
-        boxMakingList = data.boxMakingList || [];
-        boxSellingList = data.boxSellingList || [];
-        conversionList = data.conversionList || [];
-        transfersList = data.transfersList || [];
-        vendorsList = data.vendorsList || [];
-        issuesList = data.issuesList || [];
-        isLoadedFromServer = true;
+        applyServerState(data);
+        writeCachedServerState(data);
         console.log("ERP state loaded successfully from PostgreSQL backend!");
     } catch (e) {
         console.error("Backend fetch failed, falling back to LocalStorage:", e);
@@ -467,7 +621,7 @@ function getPolishStockDistribution() {
     // Apply Polish Sales
     polishSalesList.forEach(s => {
         const qty = parseInt(s.pieces) || 0;
-        const sourceLoc = s.sourceLocation || 'Surat';
+        const sourceLoc = s.sourceLocation || 'Mumbai';
         if (sourceLoc === 'Vendor') {
             vendorPcs = Math.max(0, vendorPcs - qty);
         } else if (sourceLoc === 'Mumbai') {
@@ -600,6 +754,7 @@ async function saveRoughBuyOnServer(newBuy) {
         console.error(`Rough Buy save failed: HTTP ${response.status}`, body);
         throw new Error(`Server rejected save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     console.log("Rough Buy saved successfully on server.");
     return response.json().catch(() => ({}));
 }
@@ -614,6 +769,7 @@ async function saveRoughSaleOnServer(newSale) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected rough sale save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -627,6 +783,7 @@ async function savePolishLotOnServer(newBuy) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected polish buy save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -640,6 +797,7 @@ async function savePolishSaleOnServer(newSale) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected polish sale save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -653,6 +811,7 @@ async function saveConversionOnServer(newConv) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected conversion save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -666,6 +825,7 @@ async function saveBoxOnServer(newEntry) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected box save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -679,6 +839,7 @@ async function saveBoxSaleOnServer(newSale) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected box sale save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -692,6 +853,59 @@ async function saveTransferOnServer(newTransfer) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected transfer save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
+    return response.json().catch(() => ({}));
+}
+
+// ── Update (edit) existing transaction records ──
+async function putRecordOnServer(path, data, label) {
+    let response;
+    try {
+        response = await fetch(`${API_BASE_URL}/${path}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+    } catch (networkErr) {
+        throw new Error("Network/CORS error reaching the server: " + networkErr.message);
+    }
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected ${label} (HTTP ${response.status}): ${body}`);
+    }
+    invalidateServerStateCache();
+    return response.json().catch(() => ({}));
+}
+
+async function updateRoughBuyOnServer(buyingNo, data)   { return putRecordOnServer(`rough-buys/${buyingNo}`, data, "rough buy update"); }
+async function updateRoughSaleOnServer(sellingNo, data) { return putRecordOnServer(`rough-sales/${sellingNo}`, data, "rough sale update"); }
+async function updatePolishLotOnServer(buyingNo, data)  { return putRecordOnServer(`polish-lots/${buyingNo}`, data, "polish buy update"); }
+async function updatePolishSaleOnServer(sellingNo, data){ return putRecordOnServer(`polish-sales/${sellingNo}`, data, "polish sale update"); }
+async function updateBoxSaleOnServer(sellingNo, data)   { return putRecordOnServer(`box-sales/${sellingNo}`, data, "box sale update"); }
+
+// ── Delete a transaction record by its records-tab type + id ──
+async function deleteRecordOnServer(type, id) {
+    const map = {
+        buys: 'rough-buys',
+        sales: 'rough-sales',
+        polish_buys: 'polish-lots',
+        polish_sales: 'polish-sales',
+        box_selling: 'box-sales'
+    };
+    const path = map[type];
+    if (!path) throw new Error("Unknown record type: " + type);
+
+    let response;
+    try {
+        response = await fetch(`${API_BASE_URL}/${path}/${id}`, { method: 'DELETE' });
+    } catch (networkErr) {
+        throw new Error("Network/CORS error reaching the server: " + networkErr.message);
+    }
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected delete (HTTP ${response.status}): ${body}`);
+    }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -705,7 +919,333 @@ async function saveVendorOnServer(newVendor) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected vendor save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
+}
+
+async function updateVendorOnServer(vendorNo, vendor) {
+    const response = await fetch(`${API_BASE_URL}/vendors/${encodeURIComponent(vendorNo)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(vendor)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected vendor update (HTTP ${response.status}): ${body}`);
+    }
+    invalidateServerStateCache();
+    return response.json().catch(() => ({}));
+}
+
+async function savePartyOnServer(party) {
+    const response = await fetch(`${API_BASE_URL}/parties`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(party)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected party save (HTTP ${response.status}): ${body}`);
+    }
+    invalidateServerStateCache();
+    return response.json().catch(() => ({}));
+}
+
+async function updatePartyOnServer(id, party) {
+    const response = await fetch(`${API_BASE_URL}/parties/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(party)
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Server rejected party update (HTTP ${response.status}): ${body}`);
+    }
+    invalidateServerStateCache();
+    return response.json().catch(() => ({}));
+}
+
+// ── Shared autocomplete helpers for party/dalal/vendor selection ──
+// Names are merged from the master tables AND every transaction record, so the
+// dropdowns stay populated even if the partiesList endpoint isn't deployed yet.
+function getTxnLists() {
+    return [buysList, salesList, polishBuysList, polishSalesList, boxSellingList];
+}
+
+function getPartyNameOptions() {
+    const names = [];
+    (partiesList || []).forEach(p => names.push(p.name));
+    getTxnLists().forEach(list => (list || []).forEach(e => names.push(e.partyName)));
+    const clean = names.map(n => (n || "").trim().toUpperCase()).filter(Boolean);
+    return [...new Set(clean)].sort();
+}
+
+function getDalalNameOptions() {
+    const names = [];
+    (vendorsList || []).forEach(v => names.push(v.name));
+    getTxnLists().forEach(list => (list || []).forEach(e => names.push(e.dalal)));
+    const clean = names.map(n => (n || "").trim().toUpperCase()).filter(Boolean);
+    return [...new Set(clean)].sort();
+}
+
+function getVendorLookupOptions() {
+    return (vendorsList || []).map(v => ({
+        value: v.vendorId,
+        label: `${v.name} (${v.vendorType || "—"} - ${v.city || "—"})`,
+        search: `${v.vendorId} ${v.name} ${v.vendorType || ""} ${v.city || ""} ${v.mobile || ""}`.toUpperCase()
+    })).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function escapeHtml(str) {
+    return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function filterAutocompleteItems(items, query, max = 50) {
+    const q = (query || "").trim().toUpperCase();
+    if (!q) return items.slice(0, max);
+    const starts = [];
+    const includes = [];
+    items.forEach(item => {
+        const hay = (item.search != null ? item.search : item.label || item.value || "").toUpperCase();
+        if (hay.startsWith(q)) starts.push(item);
+        else if (hay.includes(q)) includes.push(item);
+    });
+    return [...starts, ...includes].slice(0, max);
+}
+
+const _autocompleteSetup = new Set();
+const _autocompleteLookups = new Map();
+
+/**
+ * Type-to-filter autocomplete. getOptionsFn may return strings or {value, label, search?}.
+ * Pass hiddenId when the visible label differs from the stored value (e.g. vendor pick).
+ */
+function initAutocomplete(inputId, getOptionsFn, config = {}) {
+    const input = document.getElementById(inputId);
+    if (!input || _autocompleteSetup.has(inputId)) return;
+    _autocompleteSetup.add(inputId);
+    if (config.hiddenId) _autocompleteLookups.set(inputId, getOptionsFn);
+
+    const hidden = config.hiddenId ? document.getElementById(config.hiddenId) : null;
+    const uppercase = config.uppercase !== false;
+
+    let wrapper = input.closest(".name-autocomplete");
+    if (!wrapper) {
+        wrapper = document.createElement("div");
+        wrapper.className = "name-autocomplete";
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+    }
+
+    const list = document.createElement("div");
+    list.className = "name-autocomplete-list hidden";
+    list.setAttribute("role", "listbox");
+    wrapper.appendChild(list);
+
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("role", "combobox");
+    input.setAttribute("aria-autocomplete", "list");
+    if (config.placeholder) input.placeholder = config.placeholder;
+
+    let activeIndex = -1;
+    let currentItems = [];
+
+    function normalizeItems(raw) {
+        return (raw || []).map(item => {
+            if (typeof item === "string") {
+                const v = item.trim().toUpperCase();
+                return { value: v, label: v, search: v };
+            }
+            const label = item.label || item.value || "";
+            const value = item.value != null ? item.value : label;
+            const search = item.search != null ? item.search : `${value} ${label}`;
+            return { value, label, search };
+        });
+    }
+
+    function getItems() {
+        return normalizeItems(typeof getOptionsFn === "function" ? getOptionsFn() : []);
+    }
+
+    function setActive(idx) {
+        activeIndex = idx;
+        list.querySelectorAll(".name-autocomplete-item").forEach((el, i) => {
+            el.classList.toggle("active", i === activeIndex);
+        });
+        const activeEl = list.querySelector(`.name-autocomplete-item[data-index="${activeIndex}"]`);
+        if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
+    }
+
+    function selectItem(item) {
+        input.value = item.label;
+        if (hidden) hidden.value = item.value;
+        list.classList.add("hidden");
+        activeIndex = -1;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    function renderList() {
+        const all = getItems();
+        currentItems = filterAutocompleteItems(all, input.value, config.maxResults || 50);
+        activeIndex = -1;
+
+        if (currentItems.length === 0) {
+            const q = (input.value || "").trim();
+            list.innerHTML = q
+                ? `<div class="name-autocomplete-empty">No matches for "${escapeHtml(q)}"</div>`
+                : `<div class="name-autocomplete-empty">No options available</div>`;
+            list.classList.remove("hidden");
+            return;
+        }
+
+        list.innerHTML = currentItems.map((item, i) =>
+            `<div class="name-autocomplete-item" role="option" data-index="${i}" data-value="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div>`
+        ).join("");
+        list.classList.remove("hidden");
+    }
+
+    input.addEventListener("input", () => {
+        if (uppercase) {
+            const pos = input.selectionStart;
+            input.value = input.value.toUpperCase();
+            input.setSelectionRange(pos, pos);
+        }
+        if (hidden) hidden.value = "";
+        renderList();
+    });
+
+    input.addEventListener("focus", renderList);
+
+    input.addEventListener("keydown", (e) => {
+        if (list.classList.contains("hidden")) {
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") renderList();
+            return;
+        }
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setActive(Math.min(activeIndex + 1, currentItems.length - 1));
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActive(Math.max(activeIndex - 1, 0));
+        } else if (e.key === "Enter" && activeIndex >= 0) {
+            e.preventDefault();
+            selectItem(currentItems[activeIndex]);
+        } else if (e.key === "Escape") {
+            list.classList.add("hidden");
+            activeIndex = -1;
+        }
+    });
+
+    list.addEventListener("mousedown", (e) => {
+        const row = e.target.closest(".name-autocomplete-item");
+        if (!row) return;
+        e.preventDefault();
+        selectItem({
+            value: row.dataset.value,
+            label: row.dataset.label
+        });
+    });
+
+    input.addEventListener("blur", () => {
+        setTimeout(() => {
+            list.classList.add("hidden");
+            activeIndex = -1;
+            if (!hidden) return;
+            const typed = (input.value || "").trim().toUpperCase();
+            if (!typed) {
+                hidden.value = "";
+                return;
+            }
+            const match = getItems().find(item =>
+                (item.label || "").toUpperCase() === typed ||
+                String(item.value || "").toUpperCase() === typed
+            );
+            if (match) {
+                input.value = match.label;
+                hidden.value = match.value;
+            }
+        }, 150);
+    });
+}
+
+function setAutocompleteValue(inputId, value, hiddenId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const hidden = hiddenId ? document.getElementById(hiddenId) : null;
+    const val = (value || "").trim();
+    if (!val) {
+        input.value = "";
+        if (hidden) hidden.value = "";
+        return;
+    }
+    if (hidden) {
+        const getFn = _autocompleteLookups.get(inputId);
+        const items = normalizeAutocompleteItemsForLookup(getFn ? getFn() : []);
+        const match = items.find(item => String(item.value) === val || (item.label || "").toUpperCase() === val.toUpperCase());
+        if (match) {
+            input.value = match.label;
+            hidden.value = match.value;
+            return;
+        }
+        input.value = val.toUpperCase();
+        hidden.value = val;
+        return;
+    }
+    input.value = val.toUpperCase();
+}
+
+function normalizeAutocompleteItemsForLookup(raw) {
+    return (raw || []).map(item => {
+        if (typeof item === "string") {
+            const v = item.trim().toUpperCase();
+            return { value: v, label: v, search: v };
+        }
+        const label = item.label || item.value || "";
+        const value = item.value != null ? item.value : label;
+        const search = item.search != null ? item.search : `${value} ${label}`;
+        return { value, label, search };
+    });
+}
+
+function fillNameSelect(selectId, options, selectedValue) {
+    const el = document.getElementById(selectId);
+    if (!el) return;
+    if (el.tagName === "INPUT") {
+        setAutocompleteValue(selectId, selectedValue);
+        return;
+    }
+    const current = (selectedValue != null ? selectedValue : el.value || "").trim().toUpperCase();
+    let html = `<option value="">-- Select --</option>`;
+    const list = (options || []).slice();
+    if (current && !list.includes(current)) list.push(current);
+    html += list.map(n => `<option value="${n}">${n}</option>`).join("");
+    el.innerHTML = html;
+    el.value = current;
+}
+
+// Populates #party-name and #dalal with type-to-filter lists (if present)
+function populateEntityDropdowns(selectedParty, selectedDalal) {
+    initAutocomplete("party-name", getPartyNameOptions, { placeholder: "Type to search party..." });
+    initAutocomplete("dalal", getDalalNameOptions, { placeholder: "Type to search dalal..." });
+    if (selectedParty) setAutocompleteValue("party-name", selectedParty);
+    if (selectedDalal) setAutocompleteValue("dalal", selectedDalal);
+}
+
+function initVendorIssueAutocomplete(selectedVendorId) {
+    initAutocomplete("issue-vendor-name", getVendorLookupOptions, {
+        hiddenId: "issue-vendor-id",
+        placeholder: "Type vendor name...",
+        uppercase: false
+    });
+    if (selectedVendorId) {
+        setAutocompleteValue("issue-vendor-name", selectedVendorId, "issue-vendor-id");
+    } else if (vendorsList.length > 0) {
+        setAutocompleteValue("issue-vendor-name", vendorsList[0].vendorId, "issue-vendor-id");
+    }
 }
 
 async function saveVendorIssueOnServer(newIssue) {
@@ -718,6 +1258,7 @@ async function saveVendorIssueOnServer(newIssue) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected vendor issue save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -731,6 +1272,7 @@ async function resolveVendorIssueOnServer(issueNo, lotId, pieces) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected vendor issue resolve (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -752,6 +1294,7 @@ async function addPaymentOnServer(newPayment, transactionType, transactionId) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected payment save (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -763,6 +1306,7 @@ async function deletePaymentOnServer(paymentId) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected payment delete (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 
@@ -776,6 +1320,7 @@ async function updateVendorIssueOnServer(issue) {
         const body = await response.text().catch(() => "");
         throw new Error(`Server rejected vendor issue update (HTTP ${response.status}): ${body}`);
     }
+    invalidateServerStateCache();
     return response.json().catch(() => ({}));
 }
 

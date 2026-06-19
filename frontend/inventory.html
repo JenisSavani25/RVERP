@@ -39,14 +39,11 @@
                     <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
                         <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-conversion" onclick="window.location.href='conversion.html'">
+                        <span class="nav-icon">⚗️</span><span class="nav-label">Rough → Polish</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
                         <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
-                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
-                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
                     </li>
                     <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
                         <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
@@ -56,11 +53,24 @@
                     <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
                         <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+
                     <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
                         <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
                     </li>
                     
-                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <div class="nav-group-header">🗃️ Master Data</div>
+                    <li class="sub-nav-item" id="nav-party-master" onclick="window.location.href='party_master.html'">
+                        <span class="nav-icon">👥</span><span class="nav-label">Party Master</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-master" onclick="window.location.href='vendor_master.html'">
+                        <span class="nav-icon">🏪</span><span class="nav-label">Vendor Master</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
                         <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
                     </li>
@@ -134,7 +144,7 @@
                                 <span class="stat-val plus" id="polish-conv">+0</span>
                             </div>
                             <div class="stock-stat">
-                                <span class="stat-label">Sold</span>
+                                <span class="stat-label">To Mumbai</span>
                                 <span class="stat-val minus" id="polish-sold">−0</span>
                             </div>
                             <div class="stock-stat">
@@ -157,7 +167,7 @@
                                 <span class="stat-val plus" id="box-made">+0</span>
                             </div>
                             <div class="stock-stat">
-                                <span class="stat-label">Sold</span>
+                                <span class="stat-label">To Mumbai</span>
                                 <span class="stat-val minus" id="box-sold">−0</span>
                             </div>
                         </div>
@@ -233,7 +243,7 @@
                             </div>
                         </div>
                         <div class="hist-row">
-                            <span class="hist-row-label">Total Sold</span>
+                            <span class="hist-row-label">Transferred to Mumbai</span>
                             <div class="hist-row-val">
                                 <span class="hist-pcs minus"  id="h-polish-sold-pcs">0</span>
                                 <span class="hist-ct"         id="h-polish-sold-ct">0.000 ct</span>
@@ -271,7 +281,7 @@
                             </div>
                         </div>
                         <div class="hist-row">
-                            <span class="hist-row-label">Total Boxes Sold</span>
+                            <span class="hist-row-label">Transferred to Mumbai</span>
                             <div class="hist-row-val">
                                 <span class="hist-pcs minus"  id="h-box-sold">0</span>
                                 <span class="hist-ct">—</span>
@@ -329,76 +339,22 @@
                 </div>
             </section>
 
-            <!-- ── ROUGH → POLISH CONVERSION FORM ── -->
+            <!-- ── ROUGH → POLISH CONVERSION (moved to its own module) ── -->
             <div class="conv-card">
                 <div class="conv-card-header">
                     <div class="conv-card-title">
                         <span>🔄</span>
-                        <span>Rough → Polish Conversion Entry</span>
-                        <span class="badge">STOCK ADJUSTMENT</span>
+                        <span>Rough → Polish Conversion</span>
+                        <span class="badge">SEPARATE MODULE</span>
                     </div>
-                    <button type="button" class="btn btn-secondary" id="conv-toggle-btn" onclick="toggleConvForm()">
-                        + New Conversion
+                    <button type="button" class="btn btn-primary" onclick="window.location.href='conversion.html'">
+                        Open Conversion Module →
                     </button>
                 </div>
-
-                <!-- Conversion Form (hidden by default) -->
-                <div id="conv-form-wrap" class="hidden">
-                    <form id="conv-form" onsubmit="saveConversion(event)" autocomplete="off">
-                        <div class="form-grid" style="margin-top: 0;">
-                            <div class="form-section full-width" style="border:none; padding: 0; box-shadow: none; margin-bottom: 0;">
-                                <div class="form-group-row">
-                                    <div class="form-control">
-                                        <label for="conv-date">Conversion Date <span class="required">*</span></label>
-                                        <input type="date" id="conv-date" required>
-                                    </div>
-                                    <div class="form-control">
-                                        <label for="conv-rough">Rough Diamonds Sent <span class="required">*</span></label>
-                                        <input type="number" id="conv-rough" min="1" step="1" placeholder="e.g. 10" required oninput="validateConvRough()">
-                                        <span class="field-hint">Deducted from Rough Stock</span>
-                                    </div>
-                                    <div class="form-control">
-                                        <label for="conv-polish">Polish Diamonds Received <span class="required">*</span></label>
-                                        <input type="number" id="conv-polish" min="1" step="1" placeholder="e.g. 8" required oninput="validateConvPolish()">
-                                        <span class="field-hint">Added to Polish Stock (≤ Rough sent)</span>
-                                    </div>
-                                    <div class="form-control">
-                                        <label for="conv-remarks">Batch / Remarks</label>
-                                        <input type="text" id="conv-remarks" placeholder="e.g. Batch 1 — SHIELD cut">
-                                    </div>
-                                </div>
-                                <div id="conv-warning" class="hidden" style="margin-top:8px; background:#fef3c7; border:1.5px solid #f59e0b; border-radius:8px; padding:10px 14px; font-size:12px; font-weight:600; color:#92400e;"></div>
-                            </div>
-                        </div>
-                        <div class="form-actions" style="margin-top: 16px;">
-                            <button type="button" class="btn btn-secondary" onclick="toggleConvForm()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">🔄 Save Conversion</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Past conversions mini-table -->
-                <div id="conv-history-wrap">
-                    <table class="ledger-table" style="margin-top:0;" id="conv-history-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Date</th>
-                                <th>Rough Sent</th>
-                                <th>Polish Received</th>
-                                <th>Wastage</th>
-                                <th>Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody id="conv-history-body">
-                            <!-- filled by JS -->
-                        </tbody>
-                    </table>
-                    <div id="conv-empty" class="empty-ledger hidden">
-                        <div class="empty-icon">🔄</div>
-                        <div>No conversion entries yet. Use the button above to record rough → polish conversions.</div>
-                    </div>
-                </div>
+                <p style="margin:8px 0 0; font-size:13px; color:#64748b;">
+                    Conversions are now recorded in the dedicated <strong>Rough → Polish</strong> module.
+                    The polished pieces are automatically added to Polish stock and reflected in the ledger below.
+                </p>
             </div>
 
             <!-- ── FULL MOVEMENT LEDGER ── -->

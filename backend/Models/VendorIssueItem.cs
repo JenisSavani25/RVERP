@@ -23,6 +23,10 @@ namespace backend.Models
         [Column("polish_lot_id")]
         public string? PolishLotId { get; set; }
 
+        [MaxLength(100)]
+        [Column("shape_name")]
+        public string? ShapeName { get; set; }
+
         [Column("quantity")]
         public int? Quantity { get; set; }
 

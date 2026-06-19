@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // BUILD PANEL SKELETONS (search bar + stats area + table container)
 // ─────────────────────────────────────────────────────────────────────────────
-const PANELS = ['rough-buy','rough-sale','polish-buy','polish-sale','box-making','box-selling','transfers','vendors'];
+const PANELS = ['rough-buy','rough-sale','polish-buy','polish-sale','box-making','box-selling','transfers','conversions'];
 const EMPTY_MSG = {
     'rough-buy':   'No Rough Buy entries yet. Go to Rough Buys to add one.',
     'rough-sale':  'No Rough Sale entries yet. Go to Rough Sales to add one.',
@@ -46,7 +46,7 @@ const EMPTY_MSG = {
     'box-making':  'No Box Making entries yet. Go to Box Making to add one.',
     'box-selling': 'No Box Selling entries yet. Go to Box Selling to add one.',
     'transfers':   'No transfers recorded yet. Go to Transfer Management to add one.',
-    'vendors':     'No vendor consignments recorded yet. Go to Vendor Management to add one.'
+    'conversions': 'No conversions recorded yet. Go to Rough → Polish to add one.'
 };
 
 function buildAllPanels() {
@@ -82,7 +82,7 @@ function renderAllTabs() {
     renderBoxMakingTab();
     renderBoxSellingTab();
     renderTransfersTab();
-    renderVendorsTab();
+    renderConversionsTab();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -147,7 +147,8 @@ function renderTransactionTab(tabId, entries, mode, accentColor) {
         const price    = parseFloat(e.price) || 0;
         const total    = parseFloat(e.finalAmount) || 0;
         const paid     = getPaidAmount(e);
-        const pending  = Math.max(0, total - paid);
+        const rawPending = total - paid;
+        const pending  = Math.max(0, rawPending);
         const status   = getPaymentStatus(e);
         const dlStatus = getDeadlineStatus(e);
         const dlLabel  = getDeadlineLabel(e, dlStatus);
@@ -158,7 +159,7 @@ function renderTransactionTab(tabId, entries, mode, accentColor) {
                     data-search="${(e.partyName||'').toLowerCase()} ${(e.dalal||'').toLowerCase()} ${ref.toLowerCase()}"
                     onclick="toggleExpand('${rowKey}', '${tabId}', ${idx})">
             <td class="accent-cell"><span class="accent-bar" style="background:${accentColor};"></span></td>
-            <td class="muted font-mono">${ref}</td>
+            <td class="font-mono font-bold">${ref}</td>
             <td class="text-nowrap">${fmtDate(date)}</td>
             <td class="font-semibold ellipsis max-w-120">${e.partyName || '—'}</td>
             <td class="muted">${e.dalal || '—'}</td>
@@ -167,13 +168,13 @@ function renderTransactionTab(tabId, entries, mode, accentColor) {
             <td class="num">${formatCurrency(Math.round(price))}</td>
             <td class="num font-bold text-primary">${formatCurrency(Math.round(total))}</td>
             <td class="num text-success">${formatCurrency(Math.round(paid))}</td>
-            <td class="num font-bold ${pending > 0 ? 'text-danger' : 'text-success'}">${formatCurrency(Math.round(pending))}</td>
+            <td class="num font-bold ${rawPending > 0 ? 'text-danger' : 'text-success'}">${rawPending < 0 ? '+' + formatCurrency(Math.round(-rawPending)) : formatCurrency(Math.round(pending))}</td>
             <td><span class="dl-badge ${dlStatus}">${dlLabel}</span></td>
             <td><span class="status-pill ${status.toLowerCase()}">${status}</span></td>
             <td>
-                <button class="btn btn-secondary btn-compact btn-outline-primary"
-                    onclick="event.stopPropagation(); window.location.href='ledger_details.html?id=${e.sellingNo || e.buyingNo}&type=${ledgerType}'">
-                    📄 Ledger
+                <button class="btn btn-secondary btn-compact"
+                    onclick="event.stopPropagation(); toggleActionMenu(this, '${e.sellingNo || e.buyingNo}', '${ledgerType}')">
+                    ⋯ Actions
                 </button>
             </td>
             <td class="chevron-cell" id="chevron-${rowKey}">›</td>
@@ -351,7 +352,8 @@ function renderBoxSellingTab() {
         const price    = parseFloat(e.price) || 0;
         const total    = parseFloat(e.finalAmount) || 0;
         const paid     = getPaidAmount(e);
-        const pending  = Math.max(0, total - paid);
+        const rawPending = total - paid;
+        const pending  = Math.max(0, rawPending);
         const status   = getPaymentStatus(e);
         const dlStatus = getDeadlineStatus(e);
         const dlLabel  = getDeadlineLabel(e, dlStatus);
@@ -361,7 +363,7 @@ function renderBoxSellingTab() {
                     data-search="${(e.partyName||'').toLowerCase()} ${(e.dalal||'').toLowerCase()} ${(e.boxId||'').toLowerCase()} ${ref.toLowerCase()}"
                     onclick="toggleExpand('${rowKey}', '${tabId}', ${idx})">
             <td class="accent-cell"><span class="accent-bar" style="background:${accentColor};"></span></td>
-            <td class="muted font-mono">${ref}</td>
+            <td class="font-mono font-bold">${ref}</td>
             <td class="font-bold font-mono text-cyan">${e.boxId || '—'}</td>
             <td class="text-nowrap">${fmtDate(e.sellingDate)}</td>
             <td class="font-semibold">${e.partyName || '—'}</td>
@@ -370,13 +372,13 @@ function renderBoxSellingTab() {
             <td class="num">${formatCurrency(Math.round(price))}</td>
             <td class="num font-bold">${formatCurrency(Math.round(total))}</td>
             <td class="num text-success">${formatCurrency(Math.round(paid))}</td>
-            <td class="num font-bold ${pending > 0 ? 'text-danger' : 'text-success'}">${formatCurrency(Math.round(pending))}</td>
+            <td class="num font-bold ${rawPending > 0 ? 'text-danger' : 'text-success'}">${rawPending < 0 ? '+' + formatCurrency(Math.round(-rawPending)) : formatCurrency(Math.round(pending))}</td>
             <td><span class="dl-badge ${dlStatus}">${dlLabel}</span></td>
             <td><span class="status-pill ${status.toLowerCase()}">${status}</span></td>
             <td>
-                <button class="btn btn-secondary btn-compact btn-outline-primary"
-                    onclick="event.stopPropagation(); window.location.href='ledger_details.html?id=${e.sellingNo}&type=box_selling'">
-                    📄 Ledger
+                <button class="btn btn-secondary btn-compact"
+                    onclick="event.stopPropagation(); toggleActionMenu(this, '${e.sellingNo}', 'box_selling')">
+                    ⋯ Actions
                 </button>
             </td>
             <td class="chevron-cell" id="chevron-${rowKey}">›</td>
@@ -599,6 +601,7 @@ function getPaymentStatus(entry) {
     const total   = parseFloat(entry.finalAmount) || 0;
     const paid    = getPaidAmount(entry);
     const pending = total - paid;
+    if (pending < 0)      return 'OVERPAID';
     if (pending <= 0)     return 'PAID';
     if (paid > 0)         return 'PARTIAL';
     return 'PENDING';
@@ -606,7 +609,7 @@ function getPaymentStatus(entry) {
 
 function getDeadlineStatus(entry) {
     const status = getPaymentStatus(entry);
-    if (status === 'PAID') return 'paid';
+    if (status === 'PAID' || status === 'OVERPAID') return 'paid';
     const dl = entry.deadlineDate;
     if (!dl) return 'ok';
     try {
@@ -706,7 +709,8 @@ function renderTransfersTab() {
         let searchStr = `${t.transferNo} ${t.itemType} ${t.fromLocation} ${t.toLocation} ${t.remarks || ''}`;
         
         if (t.itemType === 'Polish') {
-            details = `Qty: <strong>${t.quantity} pcs</strong>`;
+            details = `<strong>${(t.shapeName || 'Polish').toUpperCase()} — ${t.quantity || 0} pcs</strong>`;
+            searchStr += ` ${t.shapeName || ''} ${t.quantity || ''}`;
         } else {
             const boxes = t.boxIds ? t.boxIds.join(", ") : "—";
             details = `Boxes: <strong>${boxes}</strong> (${t.boxIds ? t.boxIds.length : 0} boxes)`;
@@ -727,11 +731,11 @@ function renderTransfersTab() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RENDER VENDORS TAB
+// RENDER CONVERSIONS TAB (Rough → Polish)
 // ─────────────────────────────────────────────────────────────────────────────
-function renderVendorsTab() {
-    const tabId = 'vendors';
-    const entries = issuesList || [];
+function renderConversionsTab() {
+    const tabId = 'conversions';
+    const entries = conversionList || [];
 
     // Update badge count
     document.getElementById(`cnt-${tabId}`).textContent = entries.length;
@@ -740,25 +744,25 @@ function renderVendorsTab() {
     const thead = document.getElementById(`thead-${tabId}`);
     thead.innerHTML = `<tr>
         <th class="accent-cell"></th>
-        <th>Issue Date</th>
-        <th>Issue No</th>
-        <th>Vendor Name</th>
-        <th>Status</th>
-        <th>Consigned Items</th>
-        <th>Resolved Date</th>
+        <th>Date</th>
+        <th>Rough Buy</th>
+        <th>Party</th>
+        <th>Polish Pcs</th>
+        <th>Polish Ct</th>
+        <th>Not Polished (Pcs / Ct)</th>
+        <th>Rate</th>
+        <th>Amount</th>
     </tr>`;
 
     // Stats
-    const totalIssues = entries.length;
-    const pendingCount = entries.filter(iss => iss.status === 'Pending').length;
-    const soldCount = entries.filter(iss => iss.status === 'Sold').length;
-    const returnedCount = entries.filter(iss => iss.status === 'Returned').length;
+    const totalConv     = entries.length;
+    const totalPolishPcs = entries.reduce((s, c) => s + (parseInt(c.polishPieces) || 0), 0);
+    const totalPolishCt  = entries.reduce((s, c) => s + (parseFloat(c.polishedCarat) || 0), 0);
 
     document.getElementById(`stats-${tabId}`).innerHTML = `
-        <div class="rec-stat"><span class="rs-label">Total Consignments</span><span class="rs-val">${totalIssues}</span></div>
-        <div class="rec-stat"><span class="rs-label">Pending</span><span class="rs-val danger">${pendingCount}</span></div>
-        <div class="rec-stat"><span class="rs-label">Sold</span><span class="rs-val success">${soldCount}</span></div>
-        <div class="rec-stat"><span class="rs-label">Returned</span><span class="rs-val">${returnedCount}</span></div>`;
+        <div class="rec-stat"><span class="rs-label">Total Conversions</span><span class="rs-val">${totalConv}</span></div>
+        <div class="rec-stat"><span class="rs-label">Polish Pcs Produced</span><span class="rs-val success">+${totalPolishPcs}</span></div>
+        <div class="rec-stat"><span class="rs-label">Polish Carat</span><span class="rs-val">${totalPolishCt.toFixed(3)}</span></div>`;
 
     // Rows
     const tbody = document.getElementById(`tbody-${tabId}`);
@@ -771,29 +775,123 @@ function renderVendorsTab() {
     }
     emptyEl.classList.add('hidden');
 
-    tbody.innerHTML = entries.map((iss, idx) => {
-        let statusClass = "pending";
-        if (iss.status === "Sold") statusClass = "paid";
-        else if (iss.status === "Returned") statusClass = "partial";
-        
-        let itemsDesc = iss.items.map(item => {
-            if (item.type === "Polish") {
-                return `💎 Polish (${item.quantity} pcs)`;
-            } else {
-                return `📦 Box ${item.id}`;
-            }
-        }).join(", ");
+    // Newest first
+    const ordered = entries
+        .map((c, idx) => ({ c, idx }))
+        .sort((a, b) => (b.c.createdAt || '').localeCompare(a.c.createdAt || ''));
 
-        let searchStr = `${iss.issueNo} ${iss.vendorName} ${iss.status} ${itemsDesc}`;
+    tbody.innerHTML = ordered.map(({ c }) => {
+        const rb     = (buysList || []).find(b => String(b.buyingNo) === String(c.roughBuyingNo));
+        const party  = (rb && rb.partyName) || '—';
+        const total  = rb ? (parseFloat(rb.totalPrice) || 0) : 0;
+        const pCarat = parseFloat(c.polishedCarat) || 0;
+        const rate   = pCarat > 0 ? total / pCarat : 0;
+        const amount = pCarat * rate * 1.15;
+        const npPcs  = parseInt(c.notPolishedPieces) || 0;
+        const npCt   = parseFloat(c.notPolishedCarat) || 0;
+
+        const searchStr = `${c.roughBuyingNo || ''} ${party} ${c.conversionDate || ''}`;
 
         return `<tr class="data-row" data-search="${searchStr}">
-            <td class="accent-cell"><span class="accent-bar" style="background:#0d9488;"></span></td>
-            <td>${fmtDate(iss.date)}</td>
-            <td><strong class="text-primary">${iss.issueNo}</strong></td>
-            <td><strong>${iss.vendorName}</strong></td>
-            <td><span class="status-pill ${statusClass}">${iss.status}</span></td>
-            <td>${itemsDesc}</td>
-            <td>${iss.resolvedDate ? fmtDate(iss.resolvedDate) : '—'}</td>
+            <td class="accent-cell"><span class="accent-bar" style="background:#9333ea;"></span></td>
+            <td>${fmtDate(c.conversionDate)}</td>
+            <td><strong class="text-primary">${c.roughBuyingNo ? '#' + c.roughBuyingNo : '—'}</strong></td>
+            <td><strong>${party}</strong></td>
+            <td class="text-success"><strong>+${parseInt(c.polishPieces) || 0}</strong></td>
+            <td>${pCarat ? pCarat.toFixed(3) : '—'}</td>
+            <td>${npPcs} pcs / ${npCt.toFixed(3)} ct</td>
+            <td>${rate ? formatCurrency(Math.round(rate)) : '—'}</td>
+            <td>${amount ? formatCurrency(Math.round(amount)) : '—'}</td>
         </tr>`;
     }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROW ACTION MENU (Ledger / Edit / Delete) + password-protected delete
+// ─────────────────────────────────────────────────────────────────────────────
+const RECORD_DELETE_PASSWORD = "vikas000";
+const EDIT_PAGE = {
+    buys: 'rough_buy.html',
+    sales: 'rough_sales.html',
+    polish_buys: 'polish_buy.html',
+    polish_sales: 'polish_sales.html',
+    box_selling: 'box_selling.html'
+};
+
+let openActionMenuEl = null;
+
+function toggleActionMenu(btn, id, type) {
+    // Clicking the same trigger again closes the menu
+    if (openActionMenuEl && openActionMenuEl.dataset.owner === `${type}-${id}`) {
+        closeActionMenu();
+        return;
+    }
+    closeActionMenu();
+
+    const menu = document.createElement('div');
+    menu.className = 'rec-action-menu';
+    menu.dataset.owner = `${type}-${id}`;
+    menu.innerHTML = `
+        <button type="button" onclick="recAction('ledger', '${id}', '${type}')">📄 Ledger</button>
+        <button type="button" onclick="recAction('edit', '${id}', '${type}')">✏️ Edit</button>
+        <button type="button" class="danger" onclick="recAction('delete', '${id}', '${type}')">🗑️ Delete</button>`;
+    document.body.appendChild(menu);
+
+    const rect = btn.getBoundingClientRect();
+    const menuWidth = 170;
+    menu.style.top = `${rect.bottom + 4}px`;
+    menu.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - menuWidth - 8))}px`;
+
+    openActionMenuEl = menu;
+    // Defer so the current click doesn't immediately trigger the outside-close
+    setTimeout(() => {
+        document.addEventListener('click', outsideActionMenuListener);
+        window.addEventListener('resize', closeActionMenu, { once: true });
+    }, 0);
+}
+
+function outsideActionMenuListener(e) {
+    if (openActionMenuEl && !openActionMenuEl.contains(e.target)) {
+        closeActionMenu();
+    }
+}
+
+function closeActionMenu() {
+    if (openActionMenuEl) {
+        openActionMenuEl.remove();
+        openActionMenuEl = null;
+        document.removeEventListener('click', outsideActionMenuListener);
+    }
+}
+
+function recAction(action, id, type) {
+    closeActionMenu();
+    if (action === 'ledger') {
+        window.location.href = `ledger_details.html?id=${id}&type=${type}`;
+    } else if (action === 'edit') {
+        const page = EDIT_PAGE[type];
+        if (!page) { alert("Editing is not available for this record type."); return; }
+        window.location.href = `${page}?edit=${id}`;
+    } else if (action === 'delete') {
+        deleteRecordWithPassword(id, type);
+    }
+}
+
+async function deleteRecordWithPassword(id, type) {
+    const entered = prompt("Enter password to delete this record:");
+    if (entered === null) return; // user cancelled
+    if (entered !== RECORD_DELETE_PASSWORD) {
+        alert("Incorrect password. The record was NOT deleted.");
+        return;
+    }
+    if (!confirm("This will permanently delete the record and its payment history. This cannot be undone.\n\nProceed?")) {
+        return;
+    }
+    try {
+        await deleteRecordOnServer(type, id);
+        alert("Record deleted successfully.");
+        window.location.reload();
+    } catch (e) {
+        alert("Could not delete this record.\n\n" + e.message);
+    }
 }

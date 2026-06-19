@@ -2,20 +2,13 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
     await loadAllDataFromServer();
-    // Load state lists
     loadTransferData();
-    
-    // Set default date to today
+
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("transfer-date").value = today;
 
-    // Set next transfer number
     setNextTransferNumber();
-
-    // Populate the dropdowns and selection lists
     populateSelections();
-
-    // Render transfer history
     renderTransferLog();
 });
 
@@ -31,10 +24,16 @@ function setNextTransferNumber() {
     document.getElementById("transfer-no").value = `TR-${String(nextNum).padStart(3, '0')}`;
 }
 
+function getPolishAvailAtLocation(loc) {
+    const polishLots = getPolishStockDistribution();
+    const lot = polishLots.POLISH || {};
+    return parseInt(lot[loc]) || 0;
+}
+
 function handleLocationChange() {
     const fromLoc = document.getElementById("from-location").value;
     const toLocInput = document.getElementById("to-location");
-    
+
     if (fromLoc === "Surat") {
         toLocInput.value = "Mumbai";
     } else {
@@ -65,44 +64,10 @@ function populateSelections() {
     const itemType = document.getElementById("item-type").value;
 
     const searchInput = document.getElementById("dabbi-search");
-    if (searchInput) {
-        searchInput.value = "";
-    }
+    if (searchInput) searchInput.value = "";
 
     if (itemType === "Polish") {
-        const lotSelect = document.getElementById("polish-lot-id");
-        lotSelect.innerHTML = "";
-
-        const polishLots = getPolishStockDistribution();
-        let added = 0;
-
-        // Sort lot IDs alphabetically/numerically
-        const sortedLotIds = Object.keys(polishLots).sort((a, b) => {
-            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-        });
-
-        sortedLotIds.forEach(lotId => {
-            const lot = polishLots[lotId];
-            const availQty = lot[fromLoc] || 0;
-            if (availQty > 0) {
-                const opt = document.createElement("option");
-                opt.value = lotId;
-                opt.textContent = `Polish Diamonds (Avail in ${fromLoc}: ${availQty} pcs)`;
-                opt.dataset.avail = availQty;
-                lotSelect.appendChild(opt);
-                added++;
-            }
-        });
-
-        if (added === 0) {
-            const opt = document.createElement("option");
-            opt.value = "";
-            opt.textContent = `No available Polish lots in ${fromLoc}`;
-            opt.dataset.avail = 0;
-            lotSelect.appendChild(opt);
-        }
-
-        handlePolishLotChange();
+        handlePolishShapeChange();
     } else {
         const dabbiContainer = document.getElementById("dabbi-list-container");
         dabbiContainer.innerHTML = "";
@@ -110,14 +75,12 @@ function populateSelections() {
         const dabbis = getDabbiStockDistribution();
         let added = 0;
 
-        // Sort dabbi/boxes by ID
         const sortedDabbiIds = Object.keys(dabbis).sort((a, b) => {
             return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
         });
 
         sortedDabbiIds.forEach(boxId => {
             const box = dabbis[boxId];
-            // Box must be in From Location and Available (not sold, not issued to vendor)
             if (box.location === fromLoc && box.status === "Available") {
                 const row = document.createElement("div");
                 row.className = "item-checkbox-row";
@@ -130,10 +93,10 @@ function populateSelections() {
 
                 const lbl = document.createElement("label");
                 lbl.htmlFor = `chk-box-${boxId}`;
-                
+
                 const boxInfo = document.createElement("span");
                 boxInfo.textContent = `📦 Box: ${boxId} | ${box.shape1 || '—'} | ${box.carat.toFixed(2)} ct`;
-                
+
                 const boxVal = document.createElement("span");
                 boxVal.textContent = formatCurrency(box.mValue);
                 boxVal.className = "font-semibold text-muted";
@@ -157,27 +120,18 @@ function populateSelections() {
     }
 }
 
-function handlePolishLotChange() {
-    const lotSelect = document.getElementById("polish-lot-id");
+function handlePolishShapeChange() {
+    const fromLoc = document.getElementById("from-location").value;
+    const avail = getPolishAvailAtLocation(fromLoc);
     const availHint = document.getElementById("polish-avail-hint");
     const qtyInput = document.getElementById("polish-quantity");
 
-    if (lotSelect.selectedIndex === -1) {
-        availHint.textContent = "Available: 0";
-        qtyInput.max = 0;
-        qtyInput.value = "";
-        return;
-    }
-
-    const selectedOpt = lotSelect.options[lotSelect.selectedIndex];
-    const avail = parseInt(selectedOpt.dataset.avail) || 0;
-
-    availHint.textContent = `Available in location: ${avail}`;
+    availHint.textContent = `Available in ${fromLoc}: ${avail} pcs`;
     qtyInput.max = avail;
-    if (avail > 0) {
-        qtyInput.value = Math.min(avail, parseInt(qtyInput.value) || 1);
-    } else {
-        qtyInput.value = "";
+
+    const qty = parseInt(qtyInput.value) || 0;
+    if (avail > 0 && qty > avail) {
+        qtyInput.value = avail;
     }
 }
 
@@ -185,6 +139,14 @@ function updateDabbiSelectedCount() {
     const container = document.getElementById("dabbi-list-container");
     const checked = container.querySelectorAll("input[type='checkbox']:checked");
     document.getElementById("dabbi-count-hint").textContent = `Selected: ${checked.length} boxes`;
+}
+
+function formatPolishTransferDetail(t) {
+    const shape = (t.shapeName || "").trim().toUpperCase();
+    const qty = parseInt(t.quantity) || 0;
+    if (shape) return `${shape} — ${qty} pcs`;
+    if (qty > 0) return `${qty} pcs`;
+    return "—";
 }
 
 async function saveTransferEntry(event) {
@@ -203,65 +165,57 @@ async function saveTransferEntry(event) {
     }
 
     const newTransfer = {
-        transferNo: transferNo,
-        date: date,
-        itemType: itemType,
-        fromLocation: fromLocation,
-        toLocation: toLocation,
-        remarks: remarks,
+        transferNo,
+        date,
+        itemType,
+        fromLocation,
+        toLocation,
+        remarks,
         createdAt: new Date().toISOString()
     };
 
     if (itemType === "Polish") {
-        const lotSelect = document.getElementById("polish-lot-id");
-        if (!lotSelect.value) {
-            alert("Please select a valid Polish lot to transfer.");
-            return;
-        }
-
-        const selectedOpt = lotSelect.options[lotSelect.selectedIndex];
-        const avail = parseInt(selectedOpt.dataset.avail) || 0;
+        const shapeName = document.getElementById("polish-shape-name").value;
+        const avail = getPolishAvailAtLocation(fromLocation);
         const qty = parseInt(document.getElementById("polish-quantity").value) || 0;
 
+        if (!shapeName || !POLISH_SHAPE_OPTIONS.includes(shapeName)) {
+            alert("Please select a valid shape from the list.");
+            return;
+        }
         if (qty <= 0) {
             alert("Transfer quantity must be greater than zero.");
             return;
         }
-
         if (qty > avail) {
-            alert(`Insufficient stock! Maximum available is ${avail} pcs.`);
+            alert(`Insufficient stock! Maximum available in ${fromLocation} is ${avail} pcs.`);
             return;
         }
 
-        newTransfer.lotId = lotSelect.value;
+        newTransfer.shapeName = shapeName;
         newTransfer.quantity = qty;
-
-     } else {
+    } else {
         const container = document.getElementById("dabbi-list-container");
         const checked = container.querySelectorAll("input[type='checkbox']:checked");
-        
+
         if (checked.length === 0) {
             alert("Please select at least one Dabbi box to transfer.");
             return;
         }
 
-        const boxIds = [];
-        checked.forEach(chk => {
-            boxIds.push(chk.value);
-        });
-
-        newTransfer.boxIds = boxIds;
+        newTransfer.boxIds = [];
+        checked.forEach(chk => newTransfer.boxIds.push(chk.value));
     }
 
     try {
-        // Save Transfer Record
         transfersList.push(newTransfer);
         await saveTransferOnServer(newTransfer);
 
-        // Reset Form & UI
         alert(`Transfer ${transferNo} executed successfully!`);
         document.getElementById("transfer-remarks").value = "";
-        
+        document.getElementById("polish-shape-name").value = "";
+        document.getElementById("polish-quantity").value = "";
+
         setNextTransferNumber();
         populateSelections();
         renderTransferLog();
@@ -283,7 +237,6 @@ function renderTransferLog() {
 
     emptyState.classList.add("hidden");
 
-    // Sort transfers by date descending, then by transferNo descending
     const sortedTransfers = [...transfersList].sort((a, b) => {
         const dateA = new Date(a.date);
         const dateB = new Date(b.date);
@@ -313,7 +266,7 @@ function renderTransferLog() {
 
         const tdDetails = document.createElement("td");
         if (t.itemType === "Polish") {
-            tdDetails.textContent = `Quantity: ${t.quantity} pcs`;
+            tdDetails.innerHTML = `<strong>${formatPolishTransferDetail(t)}</strong>`;
         } else {
             tdDetails.textContent = `Boxes: ${t.boxIds ? t.boxIds.join(", ") : "—"} (${t.boxIds ? t.boxIds.length : 0} boxes)`;
         }
@@ -337,13 +290,9 @@ function renderTransferLog() {
 function filterDabbiList() {
     const searchVal = document.getElementById("dabbi-search").value.trim().toLowerCase();
     const rows = document.querySelectorAll("#dabbi-list-container .item-checkbox-row");
-    
+
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
-        if (text.includes(searchVal)) {
-            row.style.display = "flex";
-        } else {
-            row.style.display = "none";
-        }
+        row.style.display = text.includes(searchVal) ? "flex" : "none";
     });
 }

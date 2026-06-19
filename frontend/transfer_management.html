@@ -40,14 +40,11 @@
                     <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
                         <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-conversion" onclick="window.location.href='conversion.html'">
+                        <span class="nav-icon">⚗️</span><span class="nav-label">Rough → Polish</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
                         <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
-                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
-                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
                     </li>
                     <li class="sub-nav-item active" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
                         <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
@@ -57,11 +54,24 @@
                     <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
                         <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+
                     <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
                         <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
                     </li>
                     
-                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <div class="nav-group-header">🗃️ Master Data</div>
+                    <li class="sub-nav-item" id="nav-party-master" onclick="window.location.href='party_master.html'">
+                        <span class="nav-icon">👥</span><span class="nav-label">Party Master</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-master" onclick="window.location.href='vendor_master.html'">
+                        <span class="nav-icon">🏪</span><span class="nav-label">Vendor Master</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
                         <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
                     </li>
@@ -135,17 +145,28 @@
 
                             <!-- DYNAMIC ITEM SELECTION AREAS -->
                             <div class="form-section form-sub-section" id="polish-selection-area">
-                                <h4 class="form-sub-title">Polish Lot Selection</h4>
+                                <h4 class="form-sub-title">Polish Shape Transfer</h4>
                                 <div class="form-group-row">
                                     <div class="form-control flex-2">
-                                        <label for="polish-lot-id">Select Polish Lot <span class="required">*</span></label>
-                                        <select id="polish-lot-id" onchange="handlePolishLotChange()">
-                                            <!-- Dynamically populated -->
+                                        <label for="polish-shape-name">Shape Name <span class="required">*</span></label>
+                                        <select id="polish-shape-name" required onchange="handlePolishShapeChange()">
+                                            <option value="">— Select Shape —</option>
+                                            <option value="FLOWER">Flower</option>
+                                            <option value="CALF">Calf</option>
+                                            <option value="MIX">Mix</option>
+                                            <option value="KITE">Kite</option>
+                                            <option value="M6">M6</option>
+                                            <option value="PIE CUT MIX">Pie cut mix</option>
+                                            <option value="TAY">Tay</option>
+                                            <option value="TAPPER">Tapper</option>
+                                            <option value="HEXA">Hexa</option>
+                                            <option value="LOZENGE">Lozenge</option>
                                         </select>
+                                        <span class="field-hint">e.g. Hexa — 100 pcs</span>
                                     </div>
                                     <div class="form-control">
-                                        <label for="polish-quantity">Quantity to Transfer <span class="required">*</span></label>
-                                        <input type="number" id="polish-quantity" min="1" placeholder="e.g. 5">
+                                        <label for="polish-quantity">Quantity (pcs) <span class="required">*</span></label>
+                                        <input type="number" id="polish-quantity" min="1" placeholder="e.g. 100" oninput="handlePolishShapeChange()">
                                         <span class="field-hint" id="polish-avail-hint">Available: 0</span>
                                     </div>
                                 </div>

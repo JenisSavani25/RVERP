@@ -2,8 +2,8 @@
 // Derives live stock from ALL transaction modules + conversion entries.
 // Rule summary:
 //   ROUGH  : +rough_buy.pieces  | -rough_sales.pieces  | -conversion.roughPieces
-//   POLISH : +polish_buy.pieces | +conversion.polishPieces | -polish_sales.pieces | -(boxMakingList.length × 2)
-//   BOX    : +boxMakingList.length | -boxSellingList.length
+//   POLISH : Surat stock only (buys + conv − transfers − box making); sales happen in Mumbai
+//   BOX    : Surat stock only (made − transferred to Mumbai); sales happen in Mumbai
 
 // ──────────────────────────────────────────────────────────────────────────────
 // GLOBAL STATE
@@ -24,9 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadBoxMakingData();
     loadBoxSellingData();
     loadConversionData();
-
-    // Set today as default for conversion date
-    document.getElementById("conv-date").value = new Date().toISOString().split('T')[0];
+    loadTransferData();
 
     // Render everything
     refreshInventory();
@@ -39,7 +37,6 @@ function refreshInventory() {
     buildMovementList();
     calculateAndRenderStockCards();
     renderHistorySummary();
-    renderConversionHistory();
     renderMovementLedger(allMovements);
 }
 
@@ -81,13 +78,14 @@ function buildMovementList() {
 
     // 3. ROUGH → POLISH CONVERSION → -Rough, +Polish
     conversionList.forEach((c, i) => {
+        const rb = (buysList || []).find(b => String(b.buyingNo) === String(c.roughBuyingNo));
         moves.push({
             date:        c.conversionDate,
             type:        'conversion',
             label:       'R→P Conversion',
             icon:        '🔄',
-            ref:         `Conv #${i + 1}`,
-            party:       c.remarks || '—',
+            ref:         c.roughBuyingNo ? `Conv #${c.roughBuyingNo}` : `Conv #${i + 1}`,
+            party:       (rb && rb.partyName) || '—',
             roughDelta:  -(parseInt(c.roughPieces) || 0),
             polishDelta: +(parseInt(c.polishPieces) || 0),
             boxDelta:    0
@@ -109,8 +107,10 @@ function buildMovementList() {
         });
     });
 
-    // 5. POLISH SALE → -Polish pieces
+    // 5. POLISH SALE — only legacy Surat-source sales affect Surat stock (new sales are Mumbai-only)
     polishSalesList.forEach(s => {
+        const sourceLoc = s.sourceLocation || 'Mumbai';
+        if (sourceLoc !== 'Surat') return;
         moves.push({
             date:        s.sellingDate,
             type:        'polish-sale',
@@ -139,18 +139,37 @@ function buildMovementList() {
         });
     });
 
-    // 7. BOX SELLING → -1 Box per entry
-    boxSellingList.forEach(bs => {
+    // 7. BOX TRANSFER OUT (to Mumbai) — box sales happen in Mumbai, not Surat
+    transfersList.forEach(t => {
+        if (t.itemType !== 'Dabbi' || t.fromLocation !== 'Surat' || !t.boxIds) return;
+        t.boxIds.forEach(boxId => {
+            moves.push({
+                date:        t.date,
+                type:        'transfer',
+                label:       'Transfer to Mumbai',
+                icon:        '🔄',
+                ref:         `Box ${boxId}`,
+                party:       t.transferNo || '—',
+                roughDelta:  0,
+                polishDelta: 0,
+                boxDelta:    -1
+            });
+        });
+    });
+
+    // 8. POLISH TRANSFER OUT (to Mumbai)
+    transfersList.forEach(t => {
+        if (t.itemType !== 'Polish' || t.fromLocation !== 'Surat') return;
         moves.push({
-            date:        bs.sellingDate,
-            type:        'box-sell',
-            label:       'Box Sale',
-            icon:        '🏷️',
-            ref:         `Box ${bs.boxId} Sale #${bs.sellingNo}`,
-            party:       bs.partyName || '—',
+            date:        t.date,
+            type:        'transfer',
+            label:       'Transfer to Mumbai',
+            icon:        '🔄',
+            ref:         t.transferNo || '—',
+            party:       `${parseInt(t.quantity) || 0} pcs`,
             roughDelta:  0,
-            polishDelta: 0,
-            boxDelta:    -1
+            polishDelta: -(parseInt(t.quantity) || 0),
+            boxDelta:    0
         });
     });
 
@@ -175,32 +194,52 @@ function buildMovementList() {
     allMovements = moves;
 }
 
+function countPolishTransferredOut() {
+    return transfersList
+        .filter(t => t.itemType === 'Polish' && t.fromLocation === 'Surat')
+        .reduce((s, t) => s + (parseInt(t.quantity) || 0), 0);
+}
+
+function countBoxesTransferredOut() {
+    return transfersList
+        .filter(t => t.itemType === 'Dabbi' && t.fromLocation === 'Surat')
+        .reduce((s, t) => s + (t.boxIds ? t.boxIds.length : 0), 0);
+}
+
+function countSuratBoxes() {
+    const dabbis = getDabbiStockDistribution();
+    return Object.values(dabbis).filter(b => b.location === 'Surat' && b.status === 'Available').length;
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // STOCK CARD CALCULATIONS & RENDER
 // ──────────────────────────────────────────────────────────────────────────────
 function calculateAndRenderStockCards() {
+    const polishDist = getPolishStockDistribution();
+    const polishLot  = polishDist.POLISH || {};
+
     // ROUGH
     const roughIn       = buysList.reduce((s, b) => s + (parseInt(b.pieces) || 0), 0);
     const roughSoldOut  = salesList.reduce((s, b) => s + (parseInt(b.pieces) || 0), 0);
     const roughConvOut  = conversionList.reduce((s, c) => s + (parseInt(c.roughPieces) || 0), 0);
     const roughStock    = roughIn - roughSoldOut - roughConvOut;
 
-    // POLISH
+    // POLISH (Surat only — sales happen in Mumbai)
     const polishBought  = polishBuysList.reduce((s, b) => s + (parseInt(b.pieces) || 0), 0);
     const polishConvIn  = conversionList.reduce((s, c) => s + (parseInt(c.polishPieces) || 0), 0);
-    const polishSoldOut = polishSalesList.reduce((s, b) => s + (parseInt(b.pieces) || 0), 0);
+    const polishXferOut = countPolishTransferredOut();
     const polishBoxUsed = boxMakingList.length * 2;
-    const polishStock   = polishBought + polishConvIn - polishSoldOut - polishBoxUsed;
+    const polishStock   = polishLot.Surat || 0;
 
-    // BOX
+    // BOX (Surat only — sales happen in Mumbai)
     const boxMade       = boxMakingList.length;
-    const boxSoldOut    = boxSellingList.length;
-    const boxStock      = boxMade - boxSoldOut;
+    const boxXferOut    = countBoxesTransferredOut();
+    const boxStock      = countSuratBoxes();
 
     // ── Update cards ──
     updateStockCard('rough',  roughStock,  roughIn,       roughSoldOut,  roughConvOut, null, null);
-    updateStockCard('polish', polishStock, polishBought,  polishConvIn,  polishSoldOut, polishBoxUsed, null);
-    updateStockCard('box',    boxStock,    boxMade,       boxSoldOut,    null, null, null);
+    updateStockCard('polish', polishStock, polishBought,  polishConvIn,  polishXferOut, polishBoxUsed, null);
+    updateStockCard('box',    boxStock,    boxMade,       boxXferOut,    null, null, null);
 }
 
 function updateStockCard(type, stock, ...args) {
@@ -279,36 +318,35 @@ function renderHistorySummary() {
     // Color the current stock value
     colorHistStock('h-rough-stock', roughStock);
 
-    // ── POLISH ──
+    // ── POLISH (Surat stock only) ──
+    const polishDist      = getPolishStockDistribution();
+    const polishLot       = polishDist.POLISH || {};
     const polishBoughtPcs = sumI(polishBuysList,  'pieces');
     const polishBoughtCt  = sumF(polishBuysList,  'carat');
     const polishBoughtAmt = sumF(polishBuysList,  'finalAmount');
     const polishConvPcs   = sumI(conversionList,  'polishPieces');
-    const polishSoldPcs   = sumI(polishSalesList, 'pieces');
-    const polishSoldCt    = sumF(polishSalesList, 'carat');
-    const polishSoldAmt   = sumF(polishSalesList, 'finalAmount');
+    const polishXferPcs   = countPolishTransferredOut();
     const polishBoxPcs    = boxMakingList.length * 2;
-    const polishStock     = polishBoughtPcs + polishConvPcs - polishSoldPcs - polishBoxPcs;
+    const polishStock     = polishLot.Surat || 0;
 
     set('h-polish-bought-pcs',  `+${polishBoughtPcs}`);
     set('h-polish-bought-ct',   fmtCt(polishBoughtCt));
     set('h-polish-bought-amt',  fmt(polishBoughtAmt));
     set('h-polish-conv-pcs',    `+${polishConvPcs}`);
-    set('h-polish-sold-pcs',    `-${polishSoldPcs}`);
-    set('h-polish-sold-ct',     fmtCt(polishSoldCt));
-    set('h-polish-sold-amt',    fmt(polishSoldAmt));
+    set('h-polish-sold-pcs',    `-${polishXferPcs}`);
+    set('h-polish-sold-ct',     '—');
+    set('h-polish-sold-amt',    '—');
     set('h-polish-box-pcs',     `-${polishBoxPcs}`);
     set('h-polish-stock',       polishStock);
 
     colorHistStock('h-polish-stock', polishStock);
 
-    // ── BOX ──
+    // ── BOX (Surat stock only) ──
     const boxMadeCnt    = boxMakingList.length;
     const boxMadeCt     = sumF(boxMakingList, 'carat');
     const boxMadeMVal   = sumF(boxMakingList, 'mValue');
-    const boxSoldCnt    = boxSellingList.length;
-    const boxSoldAmt    = sumF(boxSellingList,'finalAmount');
-    const boxStock      = boxMadeCnt - boxSoldCnt;
+    const boxXferCnt    = countBoxesTransferredOut();
+    const boxStock      = countSuratBoxes();
     // Carat of boxes still in stock: proportional
     const boxStockCt    = boxMadeCnt > 0
         ? (boxStock / boxMadeCnt) * boxMadeCt
@@ -317,8 +355,8 @@ function renderHistorySummary() {
     set('h-box-made',       `+${boxMadeCnt}`);
     set('h-box-made-ct',    fmtCt(boxMadeCt));
     set('h-box-made-mval',  fmt(boxMadeMVal));
-    set('h-box-sold',       `-${boxSoldCnt}`);
-    set('h-box-sold-amt',   fmt(boxSoldAmt));
+    set('h-box-sold',       `-${boxXferCnt}`);
+    set('h-box-sold-amt',   '—');
     set('h-box-stock',      boxStock);
     set('h-box-stock-ct',   fmtCt(Math.max(0, boxStockCt)));
 
@@ -353,41 +391,6 @@ function colorHistStock(id, value) {
     if (value < 0) el.style.color = '#dc2626';
     else if (value === 0) el.style.color = '#f59e0b';
     else el.style.color = '#0f766e';
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// RENDER CONVERSION HISTORY
-// ──────────────────────────────────────────────────────────────────────────────
-function renderConversionHistory() {
-    const tbody  = document.getElementById('conv-history-body');
-    const empty  = document.getElementById('conv-empty');
-
-    if (conversionList.length === 0) {
-        tbody.innerHTML = '';
-        document.getElementById('conv-history-table').classList.add('hidden');
-        empty.classList.remove('hidden');
-        return;
-    }
-
-    document.getElementById('conv-history-table').classList.remove('hidden');
-    empty.classList.add('hidden');
-
-    tbody.innerHTML = conversionList.map((c, i) => {
-        const roughPcs  = parseInt(c.roughPieces) || 0;
-        const polishPcs = parseInt(c.polishPieces) || 0;
-        const wastage   = roughPcs - polishPcs;
-        return `
-        <tr>
-            <td class="text-muted font-11">#${i+1}</td>
-            <td>${formatLedgerDate(c.conversionDate)}</td>
-            <td class="delta minus">−${roughPcs}</td>
-            <td class="delta plus">+${polishPcs}</td>
-            <td class="font-semibold ${wastage > 0 ? 'text-warning' : 'text-muted'}">
-                ${wastage > 0 ? '⚠ ' + wastage + ' pcs lost' : '—'}
-            </td>
-            <td class="text-muted">${c.remarks || '—'}</td>
-        </tr>`;
-    }).join('');
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -444,97 +447,13 @@ function applyFilter(filter, btn) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// CONVERSION FORM TOGGLE
+// SAVE CONVERSION ENTRY (kept for backward-compat; entry now lives in conversion.html)
 // ──────────────────────────────────────────────────────────────────────────────
-function toggleConvForm() {
-    const wrap = document.getElementById('conv-form-wrap');
-    const btn  = document.getElementById('conv-toggle-btn');
-    const isHidden = wrap.classList.contains('hidden');
-    wrap.classList.toggle('hidden', !isHidden);
-    btn.textContent = isHidden ? '✕ Cancel' : '+ New Conversion';
-
-    if (isHidden) {
-        // Reset form
-        document.getElementById('conv-form').reset();
-        document.getElementById('conv-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('conv-warning').classList.add('hidden');
-    }
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// CONVERSION VALIDATION HELPERS
-// ──────────────────────────────────────────────────────────────────────────────
-function validateConvRough() {
-    const roughInput  = document.getElementById('conv-rough');
-    const warnEl      = document.getElementById('conv-warning');
-
-    const roughVal    = parseInt(roughInput.value) || 0;
-
-    // Current rough stock
-    const roughIn     = buysList.reduce((s, b) => s + (parseInt(b.pieces) || 0), 0);
-    const roughSold   = salesList.reduce((s, b) => s + (parseInt(b.pieces) || 0), 0);
-    const roughConv   = conversionList.reduce((s, c) => s + (parseInt(c.roughPieces) || 0), 0);
-    const currentRoughStock = roughIn - roughSold - roughConv;
-
-    if (roughVal > currentRoughStock) {
-        warnEl.textContent = `⚠ Warning: You are converting ${roughVal} but current Rough Stock is only ${currentRoughStock}. This will result in a negative rough stock balance.`;
-        warnEl.classList.remove('hidden');
-    } else {
-        warnEl.classList.add('hidden');
-    }
-
-    validateConvPolish();
-}
-
-function validateConvPolish() {
-    const roughVal  = parseInt(document.getElementById('conv-rough').value) || 0;
-    const polishVal = parseInt(document.getElementById('conv-polish').value) || 0;
-    const warnEl    = document.getElementById('conv-warning');
-
-    if (polishVal > roughVal && roughVal > 0) {
-        warnEl.textContent = `⚠ Polish received (${polishVal}) cannot exceed Rough sent (${roughVal}).`;
-        warnEl.classList.remove('hidden');
-    }
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// SAVE CONVERSION ENTRY
-// ──────────────────────────────────────────────────────────────────────────────
-async function saveConversion(event) {
-    event.preventDefault();
-
-    const convDate   = document.getElementById('conv-date').value;
-    const roughPcs   = parseInt(document.getElementById('conv-rough').value) || 0;
-    const polishPcs  = parseInt(document.getElementById('conv-polish').value) || 0;
-    const remarks    = document.getElementById('conv-remarks').value.trim();
-
-    // Validation
-    if (!convDate) { alert('Please enter a conversion date.'); return; }
-    if (roughPcs <= 0) { alert('Rough Diamonds sent must be at least 1.'); return; }
-    if (polishPcs <= 0) { alert('Polish Diamonds received must be at least 1.'); return; }
-    if (polishPcs > roughPcs) {
-        alert(`Polish received (${polishPcs}) cannot be greater than Rough sent (${roughPcs}).`);
-        return;
-    }
-
-    const newConv = {
-        conversionDate: convDate,
-        roughPieces:    roughPcs,
-        polishPieces:   polishPcs,
-        remarks:        remarks,
-        createdAt:      new Date().toISOString()
-    };
-
+async function saveConversion(newConv) {
     try {
         conversionList.push(newConv);
         await saveConversionOnServer(newConv);
-
-        // Refresh without page reload
-        toggleConvForm();
         refreshInventory();
-
-        // Show quick confirmation
-        showToast(`✅ Conversion saved: −${roughPcs} Rough → +${polishPcs} Polish`);
     } catch (e) {
         conversionList = conversionList.filter(item => item.createdAt !== newConv.createdAt);
         alert("Conversion save failed.\n\n" + e.message);

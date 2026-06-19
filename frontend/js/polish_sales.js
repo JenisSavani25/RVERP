@@ -1,37 +1,100 @@
 // --- POLISH SALES ENTRY LOGIC ---
 
 let prefilledIssueNo = null;
-let prefilledSourceLocation = null;
+let prefilledSourceLocation = 'Mumbai';
 let prefilledLotId = null;
+let editSellingNo = null;
+
+function getSaleSourceLocation() {
+    // Vendor consignment sales deduct from vendor stock, not Mumbai
+    if (prefilledIssueNo) return 'Vendor';
+    return prefilledSourceLocation || 'Mumbai';
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     await loadAllDataFromServer();
     // Load shared data
     loadPolishSalesData();
     loadIssueData();
+
+    // Populate party/dalal dropdowns from master lists
+    populateEntityDropdowns();
     
     // Set Default Form Date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("selling-date").value = today;
-    
-    // Populate form next number
-    setNextSellingNumber();
-
-    // Lot ID dropdown populated is removed, direct sales now use FIFO
-
-    // Check for vendor prefill parameters
-    parseUrlParamsAndPrefill();
-
-    // Prefilled lot checkboxes are removed
-    // populateLotCheckboxList();
-
-    // Trigger Initial Calculations
-    toggleCurrencyMode();
-    calculateFormPrices();
 
     // Add real-time event listeners to validate values
     setupRealTimeValidation();
+
+    const editParam = new URLSearchParams(window.location.search).get('edit');
+    if (editParam !== null && !isNaN(parseInt(editParam))) {
+        enterEditMode(parseInt(editParam));
+    } else {
+        // Populate form next number
+        setNextSellingNumber();
+        // Check for vendor prefill parameters
+        parseUrlParamsAndPrefill();
+        // Trigger Initial Calculations
+        toggleCurrencyMode();
+        calculateFormPrices();
+    }
 });
+
+function enterEditMode(no) {
+    const entry = polishSalesList.find(s => parseInt(s.sellingNo) === no);
+    if (!entry) {
+        alert("Could not find Polish Sale #" + no + " to edit. It may have been deleted.");
+        setNextSellingNumber();
+        toggleCurrencyMode();
+        calculateFormPrices();
+        return;
+    }
+    editSellingNo = no;
+
+    // Preserve lot/source/issue linkage so the update carries them unchanged
+    prefilledLotId = entry.lotId || "";
+    prefilledSourceLocation = entry.sourceLocation || "Mumbai";
+    prefilledIssueNo = entry.issueNo || null;
+
+    document.getElementById("selling-no").value = entry.sellingNo;
+    document.getElementById("selling-no").readOnly = true;
+    document.getElementById("selling-date").value = entry.sellingDate || "";
+    populateEntityDropdowns(entry.partyName, entry.dalal);
+    document.getElementById("pieces").value = entry.pieces || "";
+    document.getElementById("carat").value = entry.carat || "";
+
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("currency-dollar").checked = true;
+    } else {
+        document.getElementById("currency-rupees").checked = true;
+    }
+    toggleCurrencyMode();
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("total-dollar").value = entry.totalDollar || "";
+        document.getElementById("dollar-rate").value = entry.dollarRate || "";
+    } else {
+        document.getElementById("price").value = entry.price || "";
+    }
+
+    document.getElementById("discount").value = entry.discount || 0;
+    const dalaliInput = document.getElementById("dalali-pct");
+    if (dalaliInput) dalaliInput.value = entry.dalali || 0;
+    document.getElementById("bill-percentage").value = entry.billPercentage || 0;
+    document.getElementById("deadline-days").value = entry.deadlineDays || 0;
+
+    const initType = document.getElementById("initial-payment-type");
+    if (initType) { initType.value = "Pending"; initType.disabled = true; }
+    const initRecv = document.getElementById("initial-received");
+    if (initRecv) { initRecv.value = 0; initRecv.disabled = true; }
+
+    calculateFormPrices();
+
+    const title = document.getElementById("page-title");
+    if (title) title.textContent = `Edit Polish Sale #${entry.sellingNo}`;
+    const submitBtn = document.querySelector('#sale-form button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Update Sale Entry";
+}
 
 function setNextSellingNumber() {
     const maxNo = polishSalesList.reduce((max, sale) => Math.max(max, parseInt(sale.sellingNo) || 0), 0);
@@ -135,10 +198,10 @@ function setupRealTimeValidation() {
         { id: "pieces", integer: true },
         { id: "carat", decimals: 3 },
         { id: "total-dollar", integer: true },
-        { id: "dollar-rate", integer: true },
+        { id: "dollar-rate", decimals: 2 },
         { id: "price", integer: true },
         { id: "discount", decimals: 1, max: 100 },
-        { id: "dalali-pct", decimals: 1, max: 100 },
+        { id: "dalali-pct", decimals: 2, max: 100 },
         { id: "bill-percentage", decimals: 1, max: 100 },
         { id: "initial-received", integer: true },
         { id: "deadline-days", integer: true }
@@ -215,7 +278,7 @@ function validateForm() {
     if (isNaN(sellingNo) || sellingNo <= 0) {
         showFieldError(sellingNoInput, "Selling Number must be a positive integer.");
         isValid = false;
-    } else if (polishSalesList.some(sale => sale.sellingNo === sellingNo)) {
+    } else if (editSellingNo === null && polishSalesList.some(sale => sale.sellingNo === sellingNo)) {
         showFieldError(sellingNoInput, "Selling Number already exists.");
         isValid = false;
     } else {
@@ -534,9 +597,19 @@ async function saveSaleEntry(event) {
         deadlineDate: calculateDeadlineDate(sellingDate, deadlineDays),
         payments,
         lotId: lotId,
-        sourceLocation: document.getElementById("source-location-select") ? document.getElementById("source-location-select").value : (prefilledSourceLocation || 'Surat'),
+        sourceLocation: getSaleSourceLocation(),
         issueNo: prefilledIssueNo
     };
+
+    if (editSellingNo !== null) {
+        try {
+            await updatePolishSaleOnServer(editSellingNo, newSale);
+            window.location.href = "records.html";
+        } catch (e) {
+            alert("Could not update this polish sale entry.\n\n" + e.message);
+        }
+        return;
+    }
 
     try {
         polishSalesList.push(newSale);
@@ -547,54 +620,29 @@ async function saveSaleEntry(event) {
         }
         
         // Redirect only when server confirms save
-        window.location.href = "index.html";
+        window.location.href = "mumbai_inventory.html";
     } catch (e) {
         polishSalesList = polishSalesList.filter(item => item.sellingNo !== newSale.sellingNo);
         alert("Could not save this polish sale entry.\n\n" + e.message);
     }
 }
 
-function onSourceLocationChange() {
-    // No lot checklist to update
-}
-
 function parseUrlParamsAndPrefill() {
     const params = new URLSearchParams(window.location.search);
     
     const vendor = params.get("vendor");
-    const lotId = params.get("lotId");
+    const shapeName = params.get("shapeName");
+    const lotId = params.get("lotId"); // legacy
     const quantity = params.get("quantity");
     const issueNo = params.get("issueNo");
-    const sourceLoc = params.get("sourceLocation");
 
     if (vendor) {
-        document.getElementById("dalal").value = vendor;
-    }
-    
-    if (sourceLoc) {
-        prefilledSourceLocation = sourceLoc; // should be 'Vendor' when sold from vendor
-        const select = document.getElementById("source-location-select");
-        if (select) {
-            let optExists = false;
-            for (let i = 0; i < select.options.length; i++) {
-                if (select.options[i].value === sourceLoc) {
-                    optExists = true;
-                    select.selectedIndex = i;
-                    break;
-                }
-            }
-            if (!optExists) {
-                const opt = document.createElement("option");
-                opt.value = sourceLoc;
-                opt.textContent = sourceLoc;
-                select.appendChild(opt);
-                select.value = sourceLoc;
-            }
-            select.disabled = true;
-        }
+        fillNameSelect("dalal", getDalalNameOptions(), vendor);
     }
 
-    if (lotId) {
+    if (shapeName) {
+        prefilledLotId = shapeName; // reused field tracks shape for vendor consignment
+    } else if (lotId) {
         prefilledLotId = lotId;
     }
 
@@ -609,31 +657,36 @@ function parseUrlParamsAndPrefill() {
     }
 }
 
-async function resolveVendorIssueOnSale(issueNo, lotId, quantity) {
+async function resolveVendorIssueOnSale(issueNo, shapeOrLotId, quantity) {
     const idx = issuesList.findIndex(iss => iss.issueNo === issueNo);
     if (idx === -1) return;
 
     const iss = issuesList[idx];
+    const matchKey = (shapeOrLotId || "").toUpperCase();
 
-    // Find the item in this issue that matches the lotId
-    const itemIndex = iss.items.findIndex(item => item.type === "Polish" && item.lotId === lotId);
+    const itemIndex = iss.items.findIndex(item => {
+        if (item.type !== "Polish") return false;
+        const key = (item.shapeName || item.lotId || "").toUpperCase();
+        return key === matchKey;
+    });
     if (itemIndex === -1) return;
 
     const itemToResolve = iss.items[itemIndex];
     const qty = parseInt(quantity) || 0;
+    const shapeName = itemToResolve.shapeName || itemToResolve.lotId;
 
     let isSplit = false;
     let soldIssue = null;
 
     if (itemToResolve.quantity > qty) {
         itemToResolve.quantity -= qty;
-        
+
         soldIssue = {
             issueNo: `${iss.issueNo}-S${Date.now().toString().slice(-4)}`,
             date: iss.date,
             vendorId: iss.vendorId,
             vendorName: iss.vendorName,
-            items: [{ type: "Polish", lotId: lotId, quantity: qty }],
+            items: [{ type: "Polish", shapeName, quantity: qty }],
             status: "Sold",
             resolvedDate: new Date().toISOString().split('T')[0],
             createdAt: new Date().toISOString()
@@ -646,13 +699,13 @@ async function resolveVendorIssueOnSale(issueNo, lotId, quantity) {
             iss.resolvedDate = new Date().toISOString().split('T')[0];
         } else {
             iss.items.splice(itemIndex, 1);
-            
+
             soldIssue = {
                 issueNo: `${iss.issueNo}-S${Date.now().toString().slice(-4)}`,
                 date: iss.date,
                 vendorId: iss.vendorId,
                 vendorName: iss.vendorName,
-                items: [itemToResolve],
+                items: [{ type: "Polish", shapeName, quantity: itemToResolve.quantity }],
                 status: "Sold",
                 resolvedDate: new Date().toISOString().split('T')[0],
                 createdAt: new Date().toISOString()

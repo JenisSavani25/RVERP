@@ -1,24 +1,82 @@
 // --- ROUGH BUYS ENTRY LOGIC ---
 
+let editBuyingNo = null;
+
 document.addEventListener("DOMContentLoaded", async () => {
     await loadAllDataFromServer();
     // Load shared buys data
     loadBuysData();
+
+    // Populate party/dalal dropdowns from master lists
+    populateEntityDropdowns();
     
     // Set Default Form Date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("buying-date").value = today;
-    
-    // Populate form next number
-    setNextBuyingNumber();
-
-    // Trigger Initial Calculations
-    toggleCurrencyMode();
-    calculateFormPrices();
 
     // Add real-time event listeners to validate values
     setupRealTimeValidation();
+
+    const editParam = new URLSearchParams(window.location.search).get('edit');
+    if (editParam !== null && !isNaN(parseInt(editParam))) {
+        enterEditMode(parseInt(editParam));
+    } else {
+        // Populate form next number + trigger initial calculations (create mode)
+        setNextBuyingNumber();
+        toggleCurrencyMode();
+        calculateFormPrices();
+    }
 });
+
+function enterEditMode(no) {
+    const entry = buysList.find(b => parseInt(b.buyingNo) === no);
+    if (!entry) {
+        alert("Could not find Rough Buy #" + no + " to edit. It may have been deleted.");
+        setNextBuyingNumber();
+        toggleCurrencyMode();
+        calculateFormPrices();
+        return;
+    }
+    editBuyingNo = no;
+
+    document.getElementById("buying-no").value = entry.buyingNo;
+    document.getElementById("buying-no").readOnly = true;
+    document.getElementById("buying-date").value = entry.buyingDate || "";
+    populateEntityDropdowns(entry.partyName, entry.dalal);
+    document.getElementById("pieces").value = entry.pieces || "";
+    document.getElementById("carat").value = entry.carat || "";
+
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("currency-dollar").checked = true;
+    } else {
+        document.getElementById("currency-rupees").checked = true;
+    }
+    toggleCurrencyMode();
+    if (entry.currencyType === 'Dollar') {
+        document.getElementById("total-dollar").value = entry.totalDollar || "";
+        document.getElementById("dollar-rate").value = entry.dollarRate || "";
+    } else {
+        document.getElementById("price").value = entry.price || "";
+    }
+
+    document.getElementById("discount").value = entry.discount || 0;
+    document.getElementById("dalali-pct").value = entry.dalali || 0;
+    document.getElementById("bill-percentage").value = entry.billPercentage || 0;
+    document.getElementById("deadline-days").value = entry.deadlineDays || 0;
+
+    // Payments are managed in the ledger; disable the initial-payment block in edit mode
+    const initType = document.getElementById("initial-payment-type");
+    if (initType) { initType.value = "Pending"; initType.disabled = true; }
+    const initRecv = document.getElementById("initial-received");
+    if (initRecv) { initRecv.value = 0; initRecv.disabled = true; }
+
+    calculateFormPrices();
+
+    const title = document.getElementById("page-title");
+    if (title) title.textContent = `Edit Rough Purchase #${entry.buyingNo}`;
+    const submitBtn = document.querySelector('#buy-form button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Update Buy Entry";
+}
 
 function setNextBuyingNumber() {
     const maxNo = buysList.reduce((max, buy) => Math.max(max, parseInt(buy.buyingNo) || 0), 0);
@@ -123,10 +181,10 @@ function setupRealTimeValidation() {
         { id: "pieces", integer: true },
         { id: "carat", decimals: 3 },
         { id: "total-dollar", integer: true },
-        { id: "dollar-rate", integer: true },
+        { id: "dollar-rate", decimals: 2 },
         { id: "price", integer: true },
         { id: "discount", decimals: 1, max: 100 },
-        { id: "dalali-pct", decimals: 1, max: 100 },
+        { id: "dalali-pct", decimals: 2, max: 100 },
         { id: "bill-percentage", decimals: 1, max: 100 },
         { id: "initial-received", integer: true },
         { id: "deadline-days", integer: true }
@@ -209,7 +267,7 @@ function validateForm() {
     if (isNaN(buyingNo) || buyingNo <= 0) {
         showFieldError(buyingNoInput, "Buying Number must be a positive integer.");
         isValid = false;
-    } else if (buysList.some(buy => buy.buyingNo === buyingNo)) {
+    } else if (editBuyingNo === null && buysList.some(buy => buy.buyingNo === buyingNo)) {
         showFieldError(buyingNoInput, "Buying Number already exists.");
         isValid = false;
     } else {
@@ -548,9 +606,14 @@ async function saveBuyEntry(event) {
     };
 
     try {
-        await saveRoughBuyOnServer(newBuy);
-        // Only redirect once the server confirms the insert succeeded
-        window.location.href = "index.html";
+        if (editBuyingNo !== null) {
+            await updateRoughBuyOnServer(editBuyingNo, newBuy);
+            window.location.href = "records.html";
+        } else {
+            await saveRoughBuyOnServer(newBuy);
+            // Only redirect once the server confirms the insert succeeded
+            window.location.href = "index.html";
+        }
     } catch (e) {
         alert("Could not save this entry to the server.\n\n" + e.message +
               "\n\nThe record was NOT saved. Please screenshot this and the Network tab.");

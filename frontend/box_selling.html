@@ -39,14 +39,11 @@
                     <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
                         <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-conversion" onclick="window.location.href='conversion.html'">
+                        <span class="nav-icon">⚗️</span><span class="nav-label">Rough → Polish</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
                         <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
-                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
-                    </li>
-                    <li class="sub-nav-item active" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
-                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
                     </li>
                     <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
                         <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
@@ -56,11 +53,23 @@
                     <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
                         <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item active" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
                         <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
                     </li>
                     
-                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <div class="nav-group-header">🗃️ Master Data</div>
+                    <li class="sub-nav-item" id="nav-party-master" onclick="window.location.href='party_master.html'">
+                        <span class="nav-icon">👥</span><span class="nav-label">Party Master</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-master" onclick="window.location.href='vendor_master.html'">
+                        <span class="nav-icon">🏪</span><span class="nav-label">Vendor Master</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
                         <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
                     </li>
@@ -81,7 +90,7 @@
         <div class="erp-main">
             <header class="erp-header">
                 <div class="header-left">
-                    <h1 id="page-title">Box Selling Entry</h1>
+                    <h1 id="page-title">Box Selling (Mumbai)</h1>
                 </div>
                 <div class="header-right">
                     <button class="btn btn-secondary" onclick="window.location.href='index.html'">
@@ -108,26 +117,18 @@
 
                                 <div class="form-group-row">
                                     <div class="form-control">
-                                        <label for="source-location-select">Source Location <span class="required">*</span></label>
-                                        <select id="source-location-select" onchange="onSourceLocationChange()">
-                                            <option value="Surat">Surat</option>
-                                            <option value="Mumbai">Mumbai</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-control">
                                         <label for="selling-date">Selling Date <span class="required">*</span></label>
                                         <input type="date" id="selling-date" required onchange="calculateFormPrices()">
                                     </div>
 
                                     <div class="form-control">
                                         <label for="dalal">Dalal (Broker) <span class="required">*</span></label>
-                                        <input type="text" id="dalal" required placeholder="Enter broker name">
+                                        <input type="text" id="dalal" required placeholder="Type to search dalal..." autocomplete="off">
                                     </div>
 
                                     <div class="form-control">
                                         <label for="party-name">Party Name <span class="required">*</span></label>
-                                        <input type="text" id="party-name" required placeholder="Enter buyer party name">
+                                        <input type="text" id="party-name" required placeholder="Type to search party..." autocomplete="off">
                                     </div>
                                 </div>
 
@@ -217,7 +218,7 @@
                                         </div>
                                         <div class="form-control">
                                             <label for="dollar-rate">Dollar Rate (₹) <span class="required">*</span></label>
-                                            <input type="number" id="dollar-rate" min="0" step="1" placeholder="e.g. 84" oninput="calculateFormPrices()">
+                                            <input type="number" id="dollar-rate" min="0" step="0.01" placeholder="e.g. 84.50" oninput="calculateFormPrices()">
                                         </div>
                                         <div class="form-control">
                                             <label for="price-auto">Auto Price (₹/ct)</label>
@@ -248,7 +249,7 @@
                                 <div class="form-group-row">
                                     <div class="form-control">
                                         <label for="dalali-pct">Dalali (%)</label>
-                                        <input type="number" id="dalali-pct" min="0" max="100" step="0.1" value="0" oninput="calculateFormPrices()">
+                                        <input type="number" id="dalali-pct" min="0" max="100" step="0.01" value="0" oninput="calculateFormPrices()">
                                     </div>
                                     <div class="form-control">
                                         <label for="dalali-amount">Dalali Amount (₹)</label>
@@ -351,7 +352,7 @@
 
                         <!-- Form Actions -->
                         <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="window.location.href='index.html'">Cancel</button>
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='mumbai_inventory.html'">Cancel</button>
                             <button type="submit" class="btn btn-primary">💾 Save Box Sale Entry</button>
                         </div>
                     </form>

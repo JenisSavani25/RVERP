@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Gems - Rough → Polish Conversion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="erp-container">
+
+        <!-- Sidebar Navigation -->
+        <aside class="erp-sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">💎</span>
+                <span class="brand-text">RV GEMS ERP</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item" id="nav-dashboard" onclick="window.location.href='index.html'">
+                        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+                    </li>
+
+                    <div class="nav-group-header">🏭 Surat HQ Operations</div>
+                    <li class="sub-nav-item" id="nav-inventory" onclick="window.location.href='inventory.html'">
+                        <span class="nav-icon">📋</span><span class="nav-label">Surat Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-buy" onclick="window.location.href='rough_buy.html'">
+                        <span class="nav-icon">📥</span><span class="nav-label">Rough Buys</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-rough-sale" onclick="window.location.href='rough_sales.html'">
+                        <span class="nav-icon">📝</span><span class="nav-label">Rough Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
+                        <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
+                    </li>
+                    <li class="sub-nav-item active" id="nav-conversion" onclick="window.location.href='conversion.html'">
+                        <span class="nav-icon">⚗️</span><span class="nav-label">Rough → Polish</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
+                        <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
+                        <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
+                    </li>
+
+                    <div class="nav-group-header">🏢 Mumbai Operations</div>
+                    <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
+                        <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+
+                    <li class="sub-nav-item" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
+                        <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
+                    </li>
+
+                    <div class="nav-group-header">🗃️ Master Data</div>
+                    <li class="sub-nav-item" id="nav-party-master" onclick="window.location.href='party_master.html'">
+                        <span class="nav-icon">👥</span><span class="nav-label">Party Master</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-master" onclick="window.location.href='vendor_master.html'">
+                        <span class="nav-icon">🏪</span><span class="nav-label">Vendor Master</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
+                        <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Administrator</span>
+                        <span class="user-role">Inventory Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="erp-main">
+            <header class="erp-header">
+                <div class="header-left">
+                    <h1 id="page-title">Rough → Polish Conversion</h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" onclick="window.location.href='records.html'">View Records</button>
+                </div>
+            </header>
+
+            <main class="erp-content">
+                <section class="content-module active-view">
+                    <form id="conv-form" onsubmit="saveConversionEntry(event)" autocomplete="off">
+                        <div class="form-grid">
+
+                            <!-- SOURCE ROUGH BUY -->
+                            <div class="form-section full-width">
+                                <h3 class="section-title">Source Rough Buy</h3>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="rough-buy-select">Select Rough Buy (ID) <span class="required">*</span></label>
+                                        <select id="rough-buy-select" required onchange="onRoughBuySelected()"></select>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="conv-date">Conversion Date <span class="required">*</span></label>
+                                        <input type="date" id="conv-date" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="src-party">Party Name</label>
+                                        <input type="text" id="src-party" readonly class="readonly-input" value="—">
+                                    </div>
+                                </div>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="src-pieces">Pieces (Rough)</label>
+                                        <input type="text" id="src-pieces" readonly class="readonly-input" value="—">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="src-carat">Carat (Rough)</label>
+                                        <input type="text" id="src-carat" readonly class="readonly-input" value="—">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="src-rate">Rupees / Ct</label>
+                                        <input type="text" id="src-rate" readonly class="readonly-input" value="—">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="src-total">Total (₹)</label>
+                                        <input type="text" id="src-total" readonly class="readonly-input" value="—">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- POLISH OUTPUT -->
+                            <div class="form-section full-width">
+                                <h3 class="section-title">Polish Output (After Polish)</h3>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="polished-carat">Polished Carat <span class="required">*</span></label>
+                                        <input type="number" id="polished-carat" min="0.001" step="0.001" placeholder="e.g. 1.85" oninput="recalcConversion()">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="polished-pieces">Pieces (After Polish) <span class="required">*</span></label>
+                                        <input type="number" id="polished-pieces" min="1" step="1" placeholder="e.g. 8" oninput="recalcConversion()">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="notpolished-pieces">Not Polished Pieces</label>
+                                        <input type="number" id="notpolished-pieces" min="0" step="1" value="0" oninput="recalcConversion()">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="notpolished-carat">Not Polished Carat</label>
+                                        <input type="number" id="notpolished-carat" min="0" step="0.001" value="0" oninput="recalcConversion()">
+                                    </div>
+                                </div>
+                                <div id="conv-warning" class="hidden" style="margin-top:8px; background:#fef3c7; border:1.5px solid #f59e0b; border-radius:8px; padding:10px 14px; font-size:12px; font-weight:600; color:#92400e;"></div>
+                            </div>
+
+                            <!-- CALCULATED PRICING -->
+                            <div class="form-section full-width">
+                                <h3 class="section-title">Calculated Values</h3>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="calc-pointer">Pointer (Carat / Pcs)</label>
+                                        <input type="text" id="calc-pointer" readonly class="readonly-input" value="—">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="calc-rate">Rate (Total / Polish Ct)</label>
+                                        <input type="text" id="calc-rate" readonly class="readonly-input" value="—">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="calc-gain">Gain (Polish Ct / Rough Ct)</label>
+                                        <input type="text" id="calc-gain" readonly class="readonly-input" value="—">
+                                    </div>
+                                </div>
+                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="calc-charges-ct">Charges / Ct (Rate × 15%)</label>
+                                        <input type="text" id="calc-charges-ct" readonly class="readonly-input" value="—">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="calc-final-price">Final Price (Rate + Charges/Ct)</label>
+                                        <input type="text" id="calc-final-price" readonly class="readonly-input" value="—">
+                                    </div>
+                                </div>
+                                <div class="detail-split-box">
+                                    <div class="split-row total-row">
+                                        <div class="split-col">
+                                            <span class="split-label">Total Charges (Charges/Ct × Polish Ct):</span>
+                                            <strong class="split-value" id="calc-total-charges">₹0.00</strong>
+                                        </div>
+                                    </div>
+                                    <div class="split-row final-row">
+                                        <div class="split-col full-width text-center">
+                                            <span class="split-label">Amount (Polish Ct × Final Price):</span>
+                                            <h2 class="split-value text-blue" id="calc-amount">₹0.00</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='inventory.html'">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="conv-save-btn">🔄 Save Conversion</button>
+                        </div>
+                    </form>
+
+                    <!-- Recent conversions -->
+                    <section class="content-module" style="margin-top:24px;">
+                        <h3 class="section-title">Recent Conversions</h3>
+                        <div class="rec-table-wrap">
+                            <table class="rec-table" id="recent-conv-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Rough Buy</th>
+                                        <th>Party</th>
+                                        <th>Polish Pcs</th>
+                                        <th>Polish Ct</th>
+                                        <th>Not Polished</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-conv-body"></tbody>
+                            </table>
+                            <div id="recent-conv-empty" class="rec-empty">
+                                <div class="empty-icon">📭</div>
+                                <div>No conversions recorded yet.</div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/shared.js"></script>
+    <script src="js/conversion.js"></script>
+</body>
+</html>

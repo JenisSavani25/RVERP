@@ -40,14 +40,11 @@
                     <li class="sub-nav-item" id="nav-polish-buy" onclick="window.location.href='polish_buy.html'">
                         <span class="nav-icon">📦</span><span class="nav-label">Polish Buys</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-conversion" onclick="window.location.href='conversion.html'">
+                        <span class="nav-icon">⚗️</span><span class="nav-label">Rough → Polish</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-box-making" onclick="window.location.href='box_making.html'">
                         <span class="nav-icon">🔷</span><span class="nav-label">Box Making</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
-                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
-                    </li>
-                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
-                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
                     </li>
                     <li class="sub-nav-item" id="nav-transfer-management" onclick="window.location.href='transfer_management.html'">
                         <span class="nav-icon">🔄</span><span class="nav-label">Transfer Management</span>
@@ -57,11 +54,24 @@
                     <li class="sub-nav-item" id="nav-mumbai-inventory" onclick="window.location.href='mumbai_inventory.html'">
                         <span class="nav-icon">🏢</span><span class="nav-label">Mumbai Inventory</span>
                     </li>
+                    <li class="sub-nav-item" id="nav-polish-sale" onclick="window.location.href='polish_sales.html'">
+                        <span class="nav-icon">✨</span><span class="nav-label">Polish Sales</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-box-selling" onclick="window.location.href='box_selling.html'">
+                        <span class="nav-icon">🏷️</span><span class="nav-label">Box Selling</span>
+                    </li>
+
                     <li class="sub-nav-item active" id="nav-vendor-management" onclick="window.location.href='vendor_management.html'">
                         <span class="nav-icon">🤝</span><span class="nav-label">Vendor Management</span>
                     </li>
                     
-                    <div class="nav-group-header">🗃️ Global Portal</div>
+                    <div class="nav-group-header">🗃️ Master Data</div>
+                    <li class="sub-nav-item" id="nav-party-master" onclick="window.location.href='party_master.html'">
+                        <span class="nav-icon">👥</span><span class="nav-label">Party Master</span>
+                    </li>
+                    <li class="sub-nav-item" id="nav-vendor-master" onclick="window.location.href='vendor_master.html'">
+                        <span class="nav-icon">🏪</span><span class="nav-label">Vendor Master</span>
+                    </li>
                     <li class="sub-nav-item" id="nav-records" onclick="window.location.href='records.html'">
                         <span class="nav-icon">🗂️</span><span class="nav-label">Records</span>
                     </li>
@@ -91,75 +101,11 @@
             </header>
 
             <main class="erp-content">
-                
-                <div class="grid-layout">
-                    
-                    <!-- VENDOR MASTER -->
-                    <div class="form-section">
-                        <h3 class="section-title">Vendor Master</h3>
-                        
-                        <!-- Register Vendor Form -->
-                        <form id="vendor-form" onsubmit="saveVendorMaster(event)" autocomplete="off">
-                            <div class="form-group-row">
-                                <div class="form-control">
-                                    <label for="vendor-id">Vendor ID</label>
-                                    <input type="text" id="vendor-id" readonly class="readonly-input" placeholder="V000">
-                                </div>
-                                <div class="form-control">
-                                    <label for="vendor-name">Name <span class="required">*</span></label>
-                                    <input type="text" id="vendor-name" required placeholder="Kishorbhai">
-                                </div>
-                            </div>
-                            <div class="form-group-row">
-                                <div class="form-control">
-                                    <label for="vendor-type">Type <span class="required">*</span></label>
-                                    <select id="vendor-type" required>
-                                        <option value="Dalal">Dalal</option>
-                                        <option value="Party">Party</option>
-                                        <option value="Broker">Broker</option>
-                                        <option value="Agent">Agent</option>
-                                        <option value="Trader">Trader</option>
-                                        <option value="Customer">Customer</option>
-                                    </select>
-                                </div>
-                                <div class="form-control">
-                                    <label for="vendor-city">City <span class="required">*</span></label>
-                                    <input type="text" id="vendor-city" required placeholder="Mumbai">
-                                </div>
-                                <div class="form-control">
-                                    <label for="vendor-mobile">Mobile <span class="required">*</span></label>
-                                    <input type="tel" id="vendor-mobile" required placeholder="9876543210">
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">➕ Register Vendor</button>
-                            </div>
-                        </form>
 
-                        <!-- Registered Vendors List -->
-                        <h4 class="form-sub-title mt-md">Registered Vendors</h4>
-                        <div class="table-responsive max-h-200">
-                            <table class="ledger-table w-full">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>City</th>
-                                        <th>Mobile</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="vendors-list-body">
-                                    <!-- Dynamic rows -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- VENDOR ISSUE FORM (CONSIGNMENT) -->
-                    <div class="form-section">
-                        <h3 class="section-title">Issue Inventory (From Mumbai)</h3>
-                        <form id="issue-form" onsubmit="saveInventoryIssue(event)" autocomplete="off">
+                <!-- VENDOR ISSUE FORM (CONSIGNMENT) -->
+                <div class="form-section full-width">
+                    <h3 class="section-title">Issue Inventory (From Mumbai)</h3>
+                    <form id="issue-form" onsubmit="saveInventoryIssue(event)" autocomplete="off">
                             <div class="form-group-row">
                                 <div class="form-control">
                                     <label for="issue-no">Issue Number</label>
@@ -170,10 +116,9 @@
                                     <input type="date" id="issue-date" required>
                                 </div>
                                 <div class="form-control flex-2">
-                                    <label for="issue-vendor-id">Select Vendor <span class="required">*</span></label>
-                                    <select id="issue-vendor-id" required>
-                                        <!-- Registered vendors loaded here -->
-                                    </select>
+                                    <label for="issue-vendor-name">Select Vendor <span class="required">*</span></label>
+                                    <input type="text" id="issue-vendor-name" required placeholder="Type vendor name..." autocomplete="off">
+                                    <input type="hidden" id="issue-vendor-id">
                                 </div>
                             </div>
 
@@ -181,25 +126,54 @@
                             <div class="staged-area-card">
                                 <h4 class="form-sub-title mt-0">Stage Items to Issue</h4>
                                 <div class="form-group-row">
-                                    <div class="form-control">
+                                    <div class="form-control max-w-180">
                                         <label for="stage-type">Item Type</label>
                                         <select id="stage-type" onchange="handleStageTypeChange()">
-                                            <option value="Polish">Polish Lot</option>
+                                            <option value="Polish">Polish (by Shape)</option>
                                             <option value="Dabbi">Dabbi Box</option>
                                         </select>
                                     </div>
-                                    <div class="form-control flex-2">
-                                        <label for="stage-item-select">Select Item</label>
-                                        <select id="stage-item-select" onchange="handleStageItemChange()">
-                                            <!-- Dynamically populated from Mumbai Inventory -->
-                                        </select>
-                                    </div>
-                                    <div class="form-control" id="stage-qty-container">
-                                        <label for="stage-qty">Qty</label>
-                                        <input type="number" id="stage-qty" min="1" placeholder="Qty">
-                                        <span class="field-hint" id="stage-avail-hint">Avail: 0</span>
+                                </div>
+
+                                <!-- Polish: shape + qty -->
+                                <div id="stage-polish-area">
+                                    <div class="form-group-row">
+                                        <div class="form-control flex-2">
+                                            <label for="stage-shape-name">Shape Name <span class="required">*</span></label>
+                                            <select id="stage-shape-name" onchange="handleStageShapeChange()">
+                                                <option value="">— Select Shape —</option>
+                                                <option value="FLOWER">Flower</option>
+                                                <option value="CALF">Calf</option>
+                                                <option value="MIX">Mix</option>
+                                                <option value="KITE">Kite</option>
+                                                <option value="M6">M6</option>
+                                                <option value="PIE CUT MIX">Pie cut mix</option>
+                                                <option value="TAY">Tay</option>
+                                                <option value="TAPPER">Tapper</option>
+                                                <option value="HEXA">Hexa</option>
+                                                <option value="LOZENGE">Lozenge</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-control">
+                                            <label for="stage-qty">Qty (pcs) <span class="required">*</span></label>
+                                            <input type="number" id="stage-qty" min="1" placeholder="e.g. 100" oninput="handleStageShapeChange()">
+                                            <span class="field-hint" id="stage-avail-hint">Avail in Mumbai: 0</span>
+                                        </div>
                                     </div>
                                 </div>
+
+                                <!-- Dabbi: box select -->
+                                <div id="stage-dabbi-area" class="hidden">
+                                    <div class="form-group-row">
+                                        <div class="form-control flex-2">
+                                            <label for="stage-item-select">Select Box</label>
+                                            <select id="stage-item-select" onchange="handleStageItemChange()">
+                                                <!-- Dynamically populated from Mumbai Inventory -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="flex-end">
                                     <button type="button" class="btn btn-secondary" onclick="addItemToStagedList()">Stage Item</button>
                                 </div>
@@ -216,8 +190,6 @@
                                 <button type="submit" class="btn btn-primary">🤝 Issue Consignment</button>
                             </div>
                         </form>
-                    </div>
-
                 </div>
 
                 <!-- ACTIVE VENDOR CONSIGNMENTS -->

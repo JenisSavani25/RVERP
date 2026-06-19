@@ -268,32 +268,14 @@ function validateBoxForm() {
         clearFieldError(shape1Input);
     }
 
-    // --- Color ---
-    const colorInput = document.getElementById("color");
-    if (!colorInput.value.trim()) {
-        showFieldError(colorInput, "Color grade is required.");
-        isValid = false;
-    } else {
-        clearFieldError(colorInput);
-    }
+    // --- Color (optional) ---
+    clearFieldError(document.getElementById("color"));
 
-    // --- Purity ---
-    const purityInput = document.getElementById("purity");
-    if (!purityInput.value.trim()) {
-        showFieldError(purityInput, "Purity / clarity grade is required.");
-        isValid = false;
-    } else {
-        clearFieldError(purityInput);
-    }
+    // --- Purity (optional) ---
+    clearFieldError(document.getElementById("purity"));
 
-    // --- MM ---
-    const mmInput = document.getElementById("mm");
-    if (!mmInput.value.trim()) {
-        showFieldError(mmInput, "MM measurements are required.");
-        isValid = false;
-    } else {
-        clearFieldError(mmInput);
-    }
+    // --- MM / Measurement (optional) ---
+    clearFieldError(document.getElementById("mm"));
 
     // --- Shape 2 ---
     const shape2Input = document.getElementById("shape2");

@@ -13,13 +13,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("issue-date").value = today;
 
     // Generate next IDs
-    setNextVendorId();
     setNextIssueNo();
 
     // Populate selectors and lists
     populateVendorDropdown();
     handleStageTypeChange();
-    renderVendorsList();
     renderConsignments();
 });
 
@@ -50,23 +48,22 @@ function setNextIssueNo() {
 }
 
 function populateVendorDropdown() {
-    const dropdown = document.getElementById("issue-vendor-id");
-    dropdown.innerHTML = "";
+    initVendorIssueAutocomplete();
+    const hidden = document.getElementById("issue-vendor-id");
+    const input = document.getElementById("issue-vendor-name");
+    if (!input) return;
 
     if (vendorsList.length === 0) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "No vendors registered yet";
-        dropdown.appendChild(opt);
+        input.value = "";
+        if (hidden) hidden.value = "";
+        input.placeholder = "No vendors registered yet";
         return;
     }
 
-    vendorsList.forEach(v => {
-        const opt = document.createElement("option");
-        opt.value = v.vendorId;
-        opt.textContent = `${v.name} (${v.vendorType} - ${v.city})`;
-        dropdown.appendChild(opt);
-    });
+    input.placeholder = "Type vendor name...";
+    if (!hidden || !hidden.value) {
+        setAutocompleteValue("issue-vendor-name", vendorsList[0].vendorId, "issue-vendor-id");
+    }
 }
 
 async function saveVendorMaster(event) {
@@ -146,89 +143,74 @@ function renderVendorsList() {
 
 function handleStageTypeChange() {
     const stageType = document.getElementById("stage-type").value;
-    const itemSelect = document.getElementById("stage-item-select");
-    const qtyContainer = document.getElementById("stage-qty-container");
+    const polishArea = document.getElementById("stage-polish-area");
+    const dabbiArea = document.getElementById("stage-dabbi-area");
     const qtyInput = document.getElementById("stage-qty");
 
+    if (stageType === "Polish") {
+        polishArea.classList.remove("hidden");
+        dabbiArea.classList.add("hidden");
+        qtyInput.value = "1";
+        handleStageShapeChange();
+    } else {
+        polishArea.classList.add("hidden");
+        dabbiArea.classList.remove("hidden");
+        qtyInput.value = "1";
+        populateDabbiOptions();
+    }
+}
+
+function populateDabbiOptions() {
+    const itemSelect = document.getElementById("stage-item-select");
     itemSelect.innerHTML = "";
 
-    if (stageType === "Polish") {
-        qtyContainer.style.display = "block";
-        qtyInput.value = "1";
+    const dabbis = getDabbiStockDistribution();
+    let added = 0;
 
-        const polishLots = getPolishStockDistribution();
-        let added = 0;
+    const sortedDabbiIds = Object.keys(dabbis).sort((a, b) => {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    });
 
-        // Sort lot IDs
-        const sortedLotIds = Object.keys(polishLots).sort((a, b) => {
-            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-        });
+    sortedDabbiIds.forEach(boxId => {
+        const box = dabbis[boxId];
+        const isStaged = stagedItems.some(item => item.type === "Dabbi" && item.id === boxId);
 
-        sortedLotIds.forEach(lotId => {
-            const lot = polishLots[lotId];
-            const availInMumbai = lot.Mumbai || 0;
-
-            // Calculate already staged qty of this lot
-            const stagedQty = stagedItems
-                .filter(item => item.type === "Polish" && item.lotId === lotId)
-                .reduce((sum, item) => sum + item.quantity, 0);
-
-            const netAvail = availInMumbai - stagedQty;
-
-            if (netAvail > 0) {
-                const opt = document.createElement("option");
-                opt.value = lotId;
-                opt.textContent = `Polish Diamonds (Avail in Mumbai: ${netAvail} pcs)`;
-                opt.dataset.avail = netAvail;
-                itemSelect.appendChild(opt);
-                added++;
-            }
-        });
-
-        if (added === 0) {
+        if (box.location === "Mumbai" && box.status === "Available" && !isStaged) {
             const opt = document.createElement("option");
-            opt.value = "";
-            opt.textContent = "No available Polish lots in Mumbai";
-            opt.dataset.avail = 0;
+            opt.value = boxId;
+            opt.textContent = `Box ${boxId} (${box.shape1 || '—'} - ${box.carat.toFixed(2)} ct)`;
+            opt.dataset.avail = 1;
             itemSelect.appendChild(opt);
+            added++;
         }
-    } else {
-        qtyContainer.style.display = "none";
-        qtyInput.value = "1";
+    });
 
-        const dabbis = getDabbiStockDistribution();
-        let added = 0;
-
-        // Sort boxes
-        const sortedDabbiIds = Object.keys(dabbis).sort((a, b) => {
-            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-        });
-
-        sortedDabbiIds.forEach(boxId => {
-            const box = dabbis[boxId];
-            // Must be physically in Mumbai, and not already staged
-            const isStaged = stagedItems.some(item => item.type === "Dabbi" && item.id === boxId);
-
-            if (box.location === "Mumbai" && box.status === "Available" && !isStaged) {
-                const opt = document.createElement("option");
-                opt.value = boxId;
-                opt.textContent = `Box ${boxId} (${box.shape1 || '—'} - ${box.carat.toFixed(2)} ct)`;
-                opt.dataset.avail = 1;
-                itemSelect.appendChild(opt);
-                added++;
-            }
-        });
-
-        if (added === 0) {
-            const opt = document.createElement("option");
-            opt.value = "";
-            opt.textContent = "No available Dabbis in Mumbai";
-            opt.dataset.avail = 0;
-            itemSelect.appendChild(opt);
-        }
+    if (added === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "No available Dabbis in Mumbai";
+        opt.dataset.avail = 0;
+        itemSelect.appendChild(opt);
     }
 
     handleStageItemChange();
+}
+
+function handleStageShapeChange() {
+    const shapeName = document.getElementById("stage-shape-name").value;
+    const availHint = document.getElementById("stage-avail-hint");
+    const qtyInput = document.getElementById("stage-qty");
+
+    const avail = shapeName ? getPolishShapeAvailInMumbai(shapeName, stagedItems) : 0;
+    availHint.textContent = `Avail in Mumbai: ${avail} pcs`;
+    qtyInput.max = avail;
+
+    const qty = parseInt(qtyInput.value) || 0;
+    if (avail > 0 && qty > avail) {
+        qtyInput.value = avail;
+    } else if (avail === 0) {
+        qtyInput.value = "";
+    }
 }
 
 function handleStageItemChange() {
@@ -257,42 +239,47 @@ function handleStageItemChange() {
 
 function addItemToStagedList() {
     const type = document.getElementById("stage-type").value;
-    const itemSelect = document.getElementById("stage-item-select");
-    const itemId = itemSelect.value;
-    const qtyInput = document.getElementById("stage-qty");
-
-    if (!itemId) {
-        alert("Please select a valid item to stage!");
-        return;
-    }
-
-    const selectedOpt = itemSelect.options[itemSelect.selectedIndex];
-    const avail = parseInt(selectedOpt.dataset.avail) || 0;
 
     if (type === "Polish") {
+        const shapeName = document.getElementById("stage-shape-name").value;
+        const qtyInput = document.getElementById("stage-qty");
         const qty = parseInt(qtyInput.value) || 0;
+        const avail = shapeName ? getPolishShapeAvailInMumbai(shapeName, stagedItems) : 0;
+
+        if (!shapeName || !POLISH_SHAPE_OPTIONS.includes(shapeName)) {
+            alert("Please select a valid shape from the list.");
+            return;
+        }
         if (qty <= 0) {
             alert("Quantity must be greater than zero!");
             return;
         }
         if (qty > avail) {
-            alert(`Insufficient stock in Mumbai! Max available is ${avail}`);
+            alert(`Insufficient ${formatPolishShapeLabel(shapeName)} stock in Mumbai! Max available is ${avail} pcs.`);
             return;
         }
 
-        // Add to staged list (accumulate if already exists in staged queue)
-        const existingIndex = stagedItems.findIndex(item => item.type === "Polish" && item.lotId === itemId);
+        const existingIndex = stagedItems.findIndex(item => item.type === "Polish" && item.shapeName === shapeName);
         if (existingIndex !== -1) {
             stagedItems[existingIndex].quantity += qty;
+            stagedItems[existingIndex].label = `💎 ${formatPolishShapeLabel(shapeName)} (${stagedItems[existingIndex].quantity} pcs)`;
         } else {
             stagedItems.push({
                 type: "Polish",
-                lotId: itemId,
+                shapeName,
                 quantity: qty,
-                label: `💎 Polish Diamonds (${qty} pcs)`
+                label: `💎 ${formatPolishShapeLabel(shapeName)} (${qty} pcs)`
             });
         }
     } else {
+        const itemSelect = document.getElementById("stage-item-select");
+        const itemId = itemSelect.value;
+
+        if (!itemId) {
+            alert("Please select a valid box to stage!");
+            return;
+        }
+
         stagedItems.push({
             type: "Dabbi",
             id: itemId,
@@ -301,7 +288,7 @@ function addItemToStagedList() {
     }
 
     renderStagedItems();
-    handleStageTypeChange(); // refresh options to deduct staged quantities
+    handleStageTypeChange();
 }
 
 function removeStagedItem(idx) {
@@ -375,7 +362,7 @@ async function saveInventoryIssue(event) {
         vendorName: vendor.name,
         items: stagedItems.map(item => {
             if (item.type === "Polish") {
-                return { type: "Polish", lotId: item.lotId, quantity: item.quantity };
+                return { type: "Polish", shapeName: item.shapeName, quantity: item.quantity };
             } else {
                 return { type: "Dabbi", id: item.id };
             }
@@ -468,7 +455,8 @@ function renderConsignments() {
 
             const itemText = document.createElement("span");
             if (item.type === "Polish") {
-                itemText.textContent = `💎 Polish — Qty: ${item.quantity} pcs`;
+                const shape = formatPolishShapeLabel(item.shapeName || item.lotId);
+                itemText.textContent = `💎 ${shape} — ${item.quantity} pcs`;
             } else {
                 itemText.textContent = `📦 Box: ${item.id}`;
             }
@@ -526,7 +514,10 @@ async function returnConsignedItem(issueNo, itemToReturn) {
         // If multiple items, remove it from this issue and create a new separate Returned issue record
         iss.items = iss.items.filter(item => {
             if (itemToReturn.type === "Polish") {
-                return !(item.type === "Polish" && item.lotId === itemToReturn.lotId);
+                const retShape = (itemToReturn.shapeName || itemToReturn.lotId || "").toUpperCase();
+                if (item.type !== "Polish") return true;
+                const itemShape = (item.shapeName || item.lotId || "").toUpperCase();
+                return itemShape !== retShape;
             } else {
                 return !(item.type === "Dabbi" && item.id === itemToReturn.id);
             }
@@ -568,7 +559,8 @@ function sellConsignedItem(issueNo, vendorName, itemToSell) {
     // split out this item (or mark the issue sold if it's the only item), and save it.
     
     if (itemToSell.type === "Polish") {
-        const url = `polish_sales.html?sourceLocation=Mumbai&vendor=${encodeURIComponent(vendorName)}&lotId=${encodeURIComponent(itemToSell.lotId)}&quantity=${itemToSell.quantity}&issueNo=${encodeURIComponent(issueNo)}`;
+        const shape = encodeURIComponent(itemToSell.shapeName || itemToSell.lotId || "");
+        const url = `polish_sales.html?vendor=${encodeURIComponent(vendorName)}&shapeName=${shape}&quantity=${itemToSell.quantity}&issueNo=${encodeURIComponent(issueNo)}`;
         window.location.href = url;
     } else {
         const url = `box_selling.html?sourceLocation=Mumbai&vendor=${encodeURIComponent(vendorName)}&boxIds=${encodeURIComponent(itemToSell.id)}&issueNo=${encodeURIComponent(issueNo)}`;

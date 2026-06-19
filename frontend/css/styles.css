@@ -1310,9 +1310,9 @@ body {
 .staged-area-card {
     background: #f8fafc;
     border: 1px solid var(--color-border-light);
-    padding: 10px;
+    padding: 16px;
     border-radius: var(--radius-sm);
-    margin-top: 10px;
+    margin-top: 12px;
 }
 .staged-title {
     margin-top: 10px;
@@ -1504,7 +1504,37 @@ body {
     border-radius: 10px;
     white-space: nowrap;
 }
+.rec-action-menu {
+    position: fixed;
+    z-index: 1000;
+    min-width: 160px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+}
+.rec-action-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.rec-action-menu button:hover { background: #f1f5f9; }
+.rec-action-menu button.danger { color: #dc2626; }
+.rec-action-menu button.danger:hover { background: #fee2e2; }
+
 .status-pill.paid     { background: #dcfce7; color: #15803d; }
+.status-pill.overpaid { background: #dcfce7; color: #15803d; border: 1px solid #16a34a; }
 .status-pill.partial  { background: #fef3c7; color: #92400e; }
 .status-pill.pending  { background: #f1f5f9; color: #64748b; }
 .status-pill.overdue  { background: #fee2e2; color: #991b1b; animation: pulse-red 1.5s infinite; }
@@ -2276,6 +2306,54 @@ tr.totals-row td.num { color: #1e293b; }
 }
 .issue-item-row:last-child {
     border-bottom: none;
+}
+
+/* --- Name autocomplete (party / dalal / vendor) --- */
+.name-autocomplete {
+    position: relative;
+    width: 100%;
+}
+.name-autocomplete > input[type="text"] {
+    width: 100%;
+}
+.name-autocomplete-list {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+.name-autocomplete-list.hidden {
+    display: none;
+}
+.name-autocomplete-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    border-bottom: 1px solid var(--color-border-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.name-autocomplete-item:last-child {
+    border-bottom: none;
+}
+.name-autocomplete-item:hover,
+.name-autocomplete-item.active {
+    background: #eff6ff;
+    color: var(--color-primary);
+}
+.name-autocomplete-empty {
+    padding: 8px 10px;
+    color: var(--color-text-muted);
+    font-size: 11px;
+    font-style: italic;
 }
 .item-action-btn {
     padding: 2px 4px;

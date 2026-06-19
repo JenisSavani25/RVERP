@@ -21,6 +21,8 @@ namespace backend.Controllers
         public async Task<IActionResult> GetAllData()
         {
             var buys = await _context.RoughBuys
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(r => r.Party)
                 .Include(r => r.Dalal)
                 .Include(r => r.Payments)
@@ -28,6 +30,8 @@ namespace backend.Controllers
                 .ToListAsync();
 
             var sales = await _context.RoughSales
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(r => r.Party)
                 .Include(r => r.Dalal)
                 .Include(r => r.Payments)
@@ -35,6 +39,8 @@ namespace backend.Controllers
                 .ToListAsync();
 
             var polishLots = await _context.PolishLots
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(r => r.Party)
                 .Include(r => r.Dalal)
                 .Include(r => r.Payments)
@@ -42,6 +48,8 @@ namespace backend.Controllers
                 .ToListAsync();
 
             var polishSales = await _context.PolishSales
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(r => r.Party)
                 .Include(r => r.Dalal)
                 .Include(r => r.Payments)
@@ -49,15 +57,20 @@ namespace backend.Controllers
                 .ToListAsync();
 
             var conversions = await _context.Conversions
+                .AsNoTracking()
                 .OrderBy(c => c.Id)
                 .ToListAsync();
 
             var boxes = await _context.Boxes
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(b => b.BoxItems)
                 .OrderBy(b => b.BoxId)
                 .ToListAsync();
 
             var boxSales = await _context.BoxSales
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(r => r.Party)
                 .Include(r => r.Dalal)
                 .Include(r => r.Payments)
@@ -66,17 +79,27 @@ namespace backend.Controllers
                 .ToListAsync();
 
             var transfers = await _context.Transfers
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(t => t.Items)
                 .OrderBy(t => t.TransferNo)
                 .ToListAsync();
 
             var vendors = await _context.Vendors
+                .AsNoTracking()
                 .OrderBy(v => v.VendorNo)
                 .ToListAsync();
 
             var issues = await _context.VendorIssues
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(i => i.Items)
                 .OrderBy(i => i.IssueNo)
+                .ToListAsync();
+
+            var parties = await _context.Parties
+                .AsNoTracking()
+                .OrderBy(p => p.Name)
                 .ToListAsync();
 
             // Map entities to JSON DTO Dictionaries/Objects matching JS expected properties
@@ -91,7 +114,8 @@ namespace backend.Controllers
                 boxSellingList = boxSales.Select(MapBoxSale).ToList(),
                 transfersList = transfers.Select(MapTransfer).ToList(),
                 vendorsList = vendors.Select(MapVendor).ToList(),
-                issuesList = issues.Select(MapVendorIssue).ToList()
+                issuesList = issues.Select(MapVendorIssue).ToList(),
+                partiesList = parties.Select(MapParty).ToList()
             };
 
             return Ok(response);
@@ -342,6 +366,10 @@ namespace backend.Controllers
                 ConversionDate = ToUtc(input.ConversionDate),
                 RoughPieces = input.RoughPieces,
                 PolishPieces = input.PolishPieces,
+                RoughBuyingNo = input.RoughBuyingNo,
+                PolishedCarat = input.PolishedCarat,
+                NotPolishedPieces = input.NotPolishedPieces,
+                NotPolishedCarat = input.NotPolishedCarat,
                 Remarks = input.Remarks,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -350,23 +378,11 @@ namespace backend.Controllers
             _context.Conversions.Add(conversion);
             await _context.SaveChangesAsync();
 
-            // Auto-create PolishLot for the Conversion
-            var lotId = $"CONV-{conversion.Id}";
-            var polishLot = new PolishLot
-            {
-                LotId = lotId,
-                BuyingDate = ToUtc(input.ConversionDate),
-                Pieces = input.PolishPieces,
-                Carat = input.PolishPieces * 0.1m, // Approx carat
-                ConversionId = conversion.Id,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            // NOTE: Polish stock is increased directly from the conversion entry
+            // (frontend adds conversion.polishPieces to polish stock), so we do NOT
+            // create a separate PolishLot here — that would double-count the pieces.
 
-            _context.PolishLots.Add(polishLot);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { success = true });
+            return Ok(new { success = true, id = conversion.Id });
         }
 
         [HttpPost("boxes")]
@@ -518,11 +534,16 @@ namespace backend.Controllers
                 UpdatedAt = DateTime.UtcNow
             };
 
-            if (input.ItemType == "Polish" && !string.IsNullOrEmpty(input.LotId))
+            if (input.ItemType == "Polish")
             {
+                if (string.IsNullOrWhiteSpace(input.ShapeName))
+                    return BadRequest("Shape name is required for polish transfers.");
+                if (input.Quantity <= 0)
+                    return BadRequest("Transfer quantity must be greater than zero.");
+
                 entity.Items.Add(new TransferItem
                 {
-                    PolishLotId = input.LotId,
+                    ShapeName = input.ShapeName.Trim().ToUpperInvariant(),
                     Quantity = input.Quantity
                 });
             }
@@ -546,13 +567,33 @@ namespace backend.Controllers
         [HttpPost("vendors")]
         public async Task<IActionResult> CreateVendor([FromBody] VendorInput input)
         {
+            if (string.IsNullOrWhiteSpace(input.Name))
+                return BadRequest("Vendor name is required.");
+
+            var name = input.Name.Trim().ToUpperInvariant();
+            var type = string.IsNullOrWhiteSpace(input.VendorType) ? "Dalal" : input.VendorType.Trim();
+
+            // Reuse an existing vendor with the same name + type instead of duplicating
+            var existing = await _context.Vendors.FirstOrDefaultAsync(v => v.Name.ToUpper() == name && v.VendorType == type);
+            if (existing != null)
+            {
+                existing.City = input.City?.Trim().ToUpperInvariant();
+                existing.Mobile = input.Mobile?.Trim();
+                existing.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, vendorId = existing.VendorNo });
+            }
+
+            // Always assign a unique vendor number on the server (ignore any client value)
+            var vendorNo = await GenerateUniqueVendorNoAsync();
+
             var entity = new VendorMaster
             {
-                VendorNo = input.VendorId,
-                Name = input.Name,
-                VendorType = input.VendorType,
-                City = input.City,
-                Mobile = input.Mobile,
+                VendorNo = vendorNo,
+                Name = name,
+                VendorType = type,
+                City = input.City?.Trim().ToUpperInvariant(),
+                Mobile = input.Mobile?.Trim(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -560,7 +601,90 @@ namespace backend.Controllers
             _context.Vendors.Add(entity);
             await _context.SaveChangesAsync();
 
+            return Ok(new { success = true, vendorId = vendorNo });
+        }
+
+        [HttpPut("vendors/{vendorNo}")]
+        public async Task<IActionResult> UpdateVendor(string vendorNo, [FromBody] VendorInput input)
+        {
+            var entity = await _context.Vendors.FirstOrDefaultAsync(v => v.VendorNo == vendorNo);
+            if (entity == null) return NotFound("Vendor not found");
+            if (string.IsNullOrWhiteSpace(input.Name))
+                return BadRequest("Vendor name is required.");
+
+            entity.Name = input.Name.Trim().ToUpperInvariant();
+            if (!string.IsNullOrWhiteSpace(input.VendorType)) entity.VendorType = input.VendorType.Trim();
+            entity.City = input.City?.Trim().ToUpperInvariant();
+            entity.Mobile = input.Mobile?.Trim();
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
             return Ok(new { success = true });
+        }
+
+        [HttpPost("parties")]
+        public async Task<IActionResult> CreateParty([FromBody] PartyInput input)
+        {
+            if (string.IsNullOrWhiteSpace(input.Name))
+                return BadRequest("Party name is required.");
+
+            var name = input.Name.Trim().ToUpperInvariant();
+            var existing = await _context.Parties.FirstOrDefaultAsync(p => p.Name.ToUpper() == name);
+            if (existing != null)
+            {
+                existing.City = input.City?.Trim().ToUpperInvariant();
+                existing.Mobile = input.Mobile?.Trim();
+                existing.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, id = existing.Id });
+            }
+
+            var entity = new PartyMaster
+            {
+                Name = name,
+                City = input.City?.Trim().ToUpperInvariant(),
+                Mobile = input.Mobile?.Trim(),
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Parties.Add(entity);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, id = entity.Id });
+        }
+
+        [HttpPut("parties/{id}")]
+        public async Task<IActionResult> UpdateParty(int id, [FromBody] PartyInput input)
+        {
+            var entity = await _context.Parties.FirstOrDefaultAsync(p => p.Id == id);
+            if (entity == null) return NotFound("Party not found");
+            if (string.IsNullOrWhiteSpace(input.Name))
+                return BadRequest("Party name is required.");
+
+            entity.Name = input.Name.Trim().ToUpperInvariant();
+            entity.City = input.City?.Trim().ToUpperInvariant();
+            entity.Mobile = input.Mobile?.Trim();
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        // Generates the next free V### vendor number, avoiding collisions
+        private async Task<string> GenerateUniqueVendorNoAsync()
+        {
+            var existingNos = await _context.Vendors
+                .Where(v => v.VendorNo != null && v.VendorNo.StartsWith("V"))
+                .Select(v => v.VendorNo!)
+                .ToListAsync();
+
+            int max = 0;
+            foreach (var no in existingNos)
+            {
+                if (int.TryParse(no.Substring(1), out var n) && n > max) max = n;
+            }
+            return $"V{(max + 1).ToString("D3")}";
         }
 
         [HttpPost("vendor-issues")]
@@ -585,10 +709,13 @@ namespace backend.Controllers
             {
                 foreach (var item in input.Items)
                 {
+                    if (item.Type == "Polish" && string.IsNullOrWhiteSpace(item.ShapeName))
+                        return BadRequest("Shape name is required for polish consignment items.");
+
                     entity.Items.Add(new VendorIssueItem
                     {
                         ItemType = item.Type,
-                        PolishLotId = item.Type == "Polish" ? item.LotId : null,
+                        ShapeName = item.Type == "Polish" ? item.ShapeName?.Trim().ToUpperInvariant() : null,
                         Quantity = item.Type == "Polish" ? item.Quantity : null,
                         BoxId = item.Type == "Dabbi" ? item.Id : null
                     });
@@ -635,7 +762,7 @@ namespace backend.Controllers
                     issue.Items.Add(new VendorIssueItem
                     {
                         ItemType = item.Type,
-                        PolishLotId = item.Type == "Polish" ? item.LotId : null,
+                        ShapeName = item.Type == "Polish" ? item.ShapeName?.Trim().ToUpperInvariant() : null,
                         Quantity = item.Type == "Polish" ? item.Quantity : null,
                         BoxId = item.Type == "Dabbi" ? item.Id : null
                     });
@@ -703,6 +830,247 @@ namespace backend.Controllers
             _context.Payments.Remove(payment);
             await _context.SaveChangesAsync();
 
+            return Ok(new { success = true });
+        }
+
+        // ──────────────────────────────────────────────────────────────────
+        // UPDATE (edit) endpoints. Core invoice fields are updated in place.
+        // Existing payments are preserved (payments are managed in the ledger).
+        // ──────────────────────────────────────────────────────────────────
+        [HttpPut("rough-buys/{buyingNo}")]
+        public async Task<IActionResult> UpdateRoughBuy(int buyingNo, [FromBody] RoughBuyInput input)
+        {
+            var entity = await _context.RoughBuys.FirstOrDefaultAsync(r => r.BuyingNo == buyingNo);
+            if (entity == null) return NotFound("Rough buy not found");
+
+            entity.PartyId = await GetOrCreatePartyIdAsync(input.PartyName);
+            entity.DalalId = await GetOrCreateVendorIdAsync(input.Dalal, "Dalal");
+            entity.BuyingDate = ToUtc(input.BuyingDate);
+            entity.Pieces = input.Pieces;
+            entity.Carat = input.Carat;
+            entity.CurrencyType = input.CurrencyType;
+            entity.TotalDollar = input.TotalDollar;
+            entity.DollarRate = input.DollarRate;
+            entity.Price = input.Price;
+            entity.TotalPrice = input.TotalPrice;
+            entity.Discount = input.Discount;
+            entity.DiscountedAmount = input.DiscountedAmount;
+            entity.Dalali = input.Dalali;
+            entity.DalaliAmount = input.DalaliAmount;
+            entity.BillPercentage = input.BillPercentage;
+            entity.BillAmount = input.BillAmount;
+            entity.CashAmount = input.CashAmount;
+            entity.Gst = input.Gst;
+            entity.NetBillAmount = input.NetBillAmount;
+            entity.NetCashAmount = input.NetCashAmount;
+            entity.FinalAmount = input.FinalAmount;
+            entity.DeadlineDays = input.DeadlineDays;
+            entity.DeadlineDate = ToUtc(input.DeadlineDate);
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpPut("rough-sales/{sellingNo}")]
+        public async Task<IActionResult> UpdateRoughSale(int sellingNo, [FromBody] RoughSaleInput input)
+        {
+            var entity = await _context.RoughSales.FirstOrDefaultAsync(r => r.SellingNo == sellingNo);
+            if (entity == null) return NotFound("Rough sale not found");
+
+            entity.PartyId = await GetOrCreatePartyIdAsync(input.PartyName);
+            entity.DalalId = await GetOrCreateVendorIdAsync(input.Dalal, "Dalal");
+            entity.SellingDate = ToUtc(input.SellingDate);
+            entity.Pieces = input.Pieces;
+            entity.Carat = input.Carat;
+            entity.CurrencyType = input.CurrencyType;
+            entity.TotalDollar = input.TotalDollar;
+            entity.DollarRate = input.DollarRate;
+            entity.Price = input.Price;
+            entity.TotalPrice = input.TotalPrice;
+            entity.Discount = input.Discount;
+            entity.DiscountedAmount = input.DiscountedAmount;
+            entity.BillPercentage = input.BillPercentage;
+            entity.BillAmount = input.BillAmount;
+            entity.CashAmount = input.CashAmount;
+            entity.Gst = input.Gst;
+            entity.NetBillAmount = input.NetBillAmount;
+            entity.NetCashAmount = input.NetCashAmount;
+            entity.FinalAmount = input.FinalAmount;
+            entity.DeadlineDays = input.DeadlineDays;
+            entity.DeadlineDate = ToUtc(input.DeadlineDate);
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpPut("polish-lots/{buyingNo}")]
+        public async Task<IActionResult> UpdatePolishLot(int buyingNo, [FromBody] PolishLotInput input)
+        {
+            var entity = await _context.PolishLots.FirstOrDefaultAsync(r => r.BuyingNo == buyingNo);
+            if (entity == null) return NotFound("Polish buy not found");
+
+            entity.PartyId = await GetOrCreatePartyIdAsync(input.PartyName);
+            entity.DalalId = await GetOrCreateVendorIdAsync(input.Dalal, "Dalal");
+            entity.BuyingDate = ToUtc(input.BuyingDate);
+            entity.Pieces = input.Pieces;
+            entity.Carat = input.Carat;
+            entity.CurrencyType = input.CurrencyType;
+            entity.TotalDollar = input.TotalDollar;
+            entity.DollarRate = input.DollarRate;
+            entity.Price = input.Price;
+            entity.TotalPrice = input.TotalPrice;
+            entity.Discount = input.Discount;
+            entity.DiscountedAmount = input.DiscountedAmount;
+            entity.BillPercentage = input.BillPercentage;
+            entity.BillAmount = input.BillAmount;
+            entity.CashAmount = input.CashAmount;
+            entity.Gst = input.Gst;
+            entity.NetBillAmount = input.NetBillAmount;
+            entity.NetCashAmount = input.NetCashAmount;
+            entity.FinalAmount = input.FinalAmount;
+            entity.DeadlineDays = input.DeadlineDays;
+            entity.DeadlineDate = ToUtc(input.DeadlineDate);
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpPut("polish-sales/{sellingNo}")]
+        public async Task<IActionResult> UpdatePolishSale(int sellingNo, [FromBody] PolishSaleInput input)
+        {
+            var entity = await _context.PolishSales.FirstOrDefaultAsync(r => r.SellingNo == sellingNo);
+            if (entity == null) return NotFound("Polish sale not found");
+
+            entity.PartyId = await GetOrCreatePartyIdAsync(input.PartyName);
+            entity.DalalId = await GetOrCreateVendorIdAsync(input.Dalal, "Dalal");
+            entity.SellingDate = ToUtc(input.SellingDate);
+            entity.Pieces = input.Pieces;
+            entity.Carat = input.Carat;
+            entity.CurrencyType = input.CurrencyType;
+            entity.TotalDollar = input.TotalDollar;
+            entity.DollarRate = input.DollarRate;
+            entity.Price = input.Price;
+            entity.TotalPrice = input.TotalPrice;
+            entity.Discount = input.Discount;
+            entity.DiscountedAmount = input.DiscountedAmount;
+            entity.Dalali = input.Dalali;
+            entity.DalaliAmount = input.DalaliAmount;
+            entity.BillPercentage = input.BillPercentage;
+            entity.BillAmount = input.BillAmount;
+            entity.CashAmount = input.CashAmount;
+            entity.Gst = input.Gst;
+            entity.NetBillAmount = input.NetBillAmount;
+            entity.NetCashAmount = input.NetCashAmount;
+            entity.FinalAmount = input.FinalAmount;
+            entity.DeadlineDays = input.DeadlineDays;
+            entity.DeadlineDate = ToUtc(input.DeadlineDate);
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpPut("box-sales/{sellingNo}")]
+        public async Task<IActionResult> UpdateBoxSale(int sellingNo, [FromBody] BoxSaleInput input)
+        {
+            var entity = await _context.BoxSales.FirstOrDefaultAsync(r => r.SellingNo == sellingNo);
+            if (entity == null) return NotFound("Box sale not found");
+
+            entity.PartyId = await GetOrCreatePartyIdAsync(input.PartyName);
+            entity.DalalId = await GetOrCreateVendorIdAsync(input.Dalal, "Dalal");
+            entity.SellingDate = ToUtc(input.SellingDate);
+            entity.CurrencyType = input.CurrencyType;
+            entity.TotalDollar = input.TotalDollar;
+            entity.DollarRate = input.DollarRate;
+            entity.Price = input.Price;
+            entity.TotalPrice = input.TotalPrice;
+            entity.Discount = input.Discount;
+            entity.DiscountedAmount = input.DiscountedAmount;
+            entity.Dalali = input.Dalali;
+            entity.DalaliAmount = input.DalaliAmount;
+            entity.BillPercentage = input.BillPercentage;
+            entity.BillAmount = input.BillAmount;
+            entity.CashAmount = input.CashAmount;
+            entity.Gst = input.Gst;
+            entity.NetBillAmount = input.NetBillAmount;
+            entity.NetCashAmount = input.NetCashAmount;
+            entity.FinalAmount = input.FinalAmount;
+            entity.DeadlineDays = input.DeadlineDays;
+            entity.DeadlineDate = ToUtc(input.DeadlineDate);
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        // ──────────────────────────────────────────────────────────────────
+        // DELETE endpoints. Child payments/items are removed first so the
+        // operation succeeds regardless of FK cascade configuration.
+        // ──────────────────────────────────────────────────────────────────
+        [HttpDelete("rough-buys/{buyingNo}")]
+        public async Task<IActionResult> DeleteRoughBuy(int buyingNo)
+        {
+            var entity = await _context.RoughBuys.Include(r => r.Payments).FirstOrDefaultAsync(r => r.BuyingNo == buyingNo);
+            if (entity == null) return NotFound("Rough buy not found");
+
+            _context.Payments.RemoveRange(entity.Payments);
+            _context.RoughBuys.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("rough-sales/{sellingNo}")]
+        public async Task<IActionResult> DeleteRoughSale(int sellingNo)
+        {
+            var entity = await _context.RoughSales.Include(r => r.Payments).FirstOrDefaultAsync(r => r.SellingNo == sellingNo);
+            if (entity == null) return NotFound("Rough sale not found");
+
+            _context.Payments.RemoveRange(entity.Payments);
+            _context.RoughSales.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("polish-lots/{buyingNo}")]
+        public async Task<IActionResult> DeletePolishLot(int buyingNo)
+        {
+            var entity = await _context.PolishLots.Include(r => r.Payments).FirstOrDefaultAsync(r => r.BuyingNo == buyingNo);
+            if (entity == null) return NotFound("Polish buy not found");
+
+            _context.Payments.RemoveRange(entity.Payments);
+            _context.PolishLots.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("polish-sales/{sellingNo}")]
+        public async Task<IActionResult> DeletePolishSale(int sellingNo)
+        {
+            var entity = await _context.PolishSales.Include(r => r.Payments).FirstOrDefaultAsync(r => r.SellingNo == sellingNo);
+            if (entity == null) return NotFound("Polish sale not found");
+
+            _context.Payments.RemoveRange(entity.Payments);
+            _context.PolishSales.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("box-sales/{sellingNo}")]
+        public async Task<IActionResult> DeleteBoxSale(int sellingNo)
+        {
+            var entity = await _context.BoxSales
+                .Include(r => r.Payments)
+                .Include(r => r.SaleItems)
+                .FirstOrDefaultAsync(r => r.SellingNo == sellingNo);
+            if (entity == null) return NotFound("Box sale not found");
+
+            _context.Payments.RemoveRange(entity.Payments);
+            _context.BoxSaleItems.RemoveRange(entity.SaleItems);
+            _context.BoxSales.Remove(entity);
+            await _context.SaveChangesAsync();
             return Ok(new { success = true });
         }
 
@@ -826,9 +1194,14 @@ namespace backend.Controllers
 
         private static object MapConversion(Conversion c) => new
         {
+            id = c.Id,
             conversionDate = c.ConversionDate.ToString("yyyy-MM-dd"),
             roughPieces = c.RoughPieces,
             polishPieces = c.PolishPieces,
+            roughBuyingNo = c.RoughBuyingNo,
+            polishedCarat = c.PolishedCarat.HasValue ? (double)c.PolishedCarat.Value : (double?)null,
+            notPolishedPieces = c.NotPolishedPieces,
+            notPolishedCarat = c.NotPolishedCarat.HasValue ? (double)c.NotPolishedCarat.Value : (double?)null,
             remarks = c.Remarks,
             createdAt = c.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         };
@@ -896,7 +1269,7 @@ namespace backend.Controllers
                     fromLocation = t.FromLocation,
                     toLocation = t.ToLocation,
                     remarks = t.Remarks,
-                    lotId = firstItem?.PolishLotId ?? "",
+                    shapeName = firstItem?.ShapeName ?? "",
                     quantity = firstItem?.Quantity ?? 0
                 };
             }
@@ -925,6 +1298,15 @@ namespace backend.Controllers
             createdAt = v.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         };
 
+        private static object MapParty(PartyMaster p) => new
+        {
+            id = p.Id,
+            name = p.Name,
+            city = p.City,
+            mobile = p.Mobile,
+            createdAt = p.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+        };
+
         private static object MapVendorIssue(VendorIssue i) => new
         {
             issueNo = i.IssueNo,
@@ -935,7 +1317,7 @@ namespace backend.Controllers
             {
                 if (item.ItemType == "Polish")
                 {
-                    return (object)new { type = "Polish", lotId = item.PolishLotId, quantity = item.Quantity };
+                    return (object)new { type = "Polish", shapeName = item.ShapeName ?? item.PolishLotId ?? "", quantity = item.Quantity };
                 }
                 else
                 {
@@ -970,8 +1352,8 @@ namespace backend.Controllers
         private async Task<int> GetOrCreatePartyIdAsync(string partyName)
         {
             if (string.IsNullOrWhiteSpace(partyName)) return 0;
-            var partyNameTrim = partyName.Trim();
-            var party = await _context.Parties.FirstOrDefaultAsync(p => p.Name.ToLower() == partyNameTrim.ToLower());
+            var partyNameTrim = partyName.Trim().ToUpperInvariant();
+            var party = await _context.Parties.FirstOrDefaultAsync(p => p.Name.ToUpper() == partyNameTrim);
             if (party == null)
             {
                 party = new PartyMaster { Name = partyNameTrim };
@@ -984,8 +1366,8 @@ namespace backend.Controllers
         private async Task<int?> GetOrCreateVendorIdAsync(string? dalalName, string type = "Dalal")
         {
             if (string.IsNullOrWhiteSpace(dalalName)) return null;
-            var nameTrim = dalalName.Trim();
-            var vendor = await _context.Vendors.FirstOrDefaultAsync(v => v.Name.ToLower() == nameTrim.ToLower() && v.VendorType == type);
+            var nameTrim = dalalName.Trim().ToUpperInvariant();
+            var vendor = await _context.Vendors.FirstOrDefaultAsync(v => v.Name.ToUpper() == nameTrim && v.VendorType == type);
             if (vendor == null)
             {
                 vendor = new VendorMaster { Name = nameTrim, VendorType = type };
@@ -1116,7 +1498,7 @@ namespace backend.Controllers
         public int DeadlineDays { get; set; }
         public DateTime DeadlineDate { get; set; }
         public string? LotId { get; set; }
-        public string SourceLocation { get; set; } = "Surat";
+        public string SourceLocation { get; set; } = "Mumbai";
         public string? IssueNo { get; set; }
         public List<PaymentInput>? Payments { get; set; }
     }
@@ -1126,6 +1508,10 @@ namespace backend.Controllers
         public DateTime ConversionDate { get; set; }
         public int RoughPieces { get; set; }
         public int PolishPieces { get; set; }
+        public int? RoughBuyingNo { get; set; }
+        public decimal? PolishedCarat { get; set; }
+        public int? NotPolishedPieces { get; set; }
+        public decimal? NotPolishedCarat { get; set; }
         public string? Remarks { get; set; }
     }
 
@@ -1188,7 +1574,7 @@ namespace backend.Controllers
         public string FromLocation { get; set; } = string.Empty;
         public string ToLocation { get; set; } = string.Empty;
         public string? Remarks { get; set; }
-        public string? LotId { get; set; }
+        public string? ShapeName { get; set; }
         public int Quantity { get; set; }
         public List<string>? BoxIds { get; set; }
     }
@@ -1202,10 +1588,18 @@ namespace backend.Controllers
         public string Mobile { get; set; } = string.Empty;
     }
 
+    public class PartyInput
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? City { get; set; }
+        public string? Mobile { get; set; }
+    }
+
     public class VendorIssueItemInput
     {
         public string Type { get; set; } = string.Empty;
-        public string? LotId { get; set; }
+        public string? ShapeName { get; set; }
+        public string? LotId { get; set; } // legacy
         public int Quantity { get; set; }
         public string? Id { get; set; } // boxId
     }
