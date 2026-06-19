@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using backend;
 using backend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,11 +26,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Apply pending EF Core migrations on startup (Render / production).
+// Apply idempotent schema updates + EF migrations on startup (Render / production).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    DatabaseSchemaBootstrap.Apply(db);
 }
 
 // Configure the HTTP request pipeline.
