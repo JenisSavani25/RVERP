@@ -105,28 +105,28 @@
                 <!-- VENDOR ISSUE FORM (CONSIGNMENT) -->
                 <div class="form-section full-width">
                     <h3 class="section-title">Issue Inventory (From Mumbai)</h3>
-                    <form id="issue-form" onsubmit="saveInventoryIssue(event)" autocomplete="off">
-                            <div class="form-group-row">
-                                <div class="form-control">
+                    <form id="issue-form" class="vendor-issue-form" onsubmit="saveInventoryIssue(event)" autocomplete="off">
+                            <div class="form-group-row compact-issue-row">
+                                <div class="form-control flex-none max-w-140">
                                     <label for="issue-no">Issue Number</label>
                                     <input type="text" id="issue-no" readonly class="readonly-input" placeholder="ISS-XXX">
                                 </div>
-                                <div class="form-control">
+                                <div class="form-control flex-none max-w-160">
                                     <label for="issue-date">Issue Date <span class="required">*</span></label>
                                     <input type="date" id="issue-date" required>
                                 </div>
-                                <div class="form-control flex-2">
-                                    <label for="issue-vendor-name">Select Vendor <span class="required">*</span></label>
+                                <div class="form-control flex-none vendor-pick-field">
+                                    <label for="issue-vendor-name">Vendor <span class="required">*</span></label>
                                     <input type="text" id="issue-vendor-name" required placeholder="Type vendor name..." autocomplete="off">
                                     <input type="hidden" id="issue-vendor-id">
                                 </div>
                             </div>
 
                             <!-- ITEM STAGING PANEL -->
-                            <div class="staged-area-card">
+                            <div class="staged-area-card compact-staging">
                                 <h4 class="form-sub-title mt-0">Stage Items to Issue</h4>
-                                <div class="form-group-row">
-                                    <div class="form-control max-w-180">
+                                <div class="form-group-row compact-stage-row">
+                                    <div class="form-control flex-none max-w-180">
                                         <label for="stage-type">Item Type</label>
                                         <select id="stage-type" onchange="handleStageTypeChange()">
                                             <option value="Polish">Polish (by Shape)</option>
@@ -137,9 +137,9 @@
 
                                 <!-- Polish: shape + qty -->
                                 <div id="stage-polish-area">
-                                    <div class="form-group-row">
-                                        <div class="form-control flex-2">
-                                            <label for="stage-shape-name">Shape Name <span class="required">*</span></label>
+                                    <div class="form-group-row compact-stage-row">
+                                        <div class="form-control flex-none shape-pick-field">
+                                            <label for="stage-shape-name">Shape <span class="required">*</span></label>
                                             <select id="stage-shape-name" onchange="handleStageShapeChange()">
                                                 <option value="">— Select Shape —</option>
                                                 <option value="FLOWER">Flower</option>
@@ -154,23 +154,23 @@
                                                 <option value="LOZENGE">Lozenge</option>
                                             </select>
                                         </div>
-                                        <div class="form-control">
+                                        <div class="form-control flex-none max-w-120">
                                             <label for="stage-qty">Qty (pcs) <span class="required">*</span></label>
-                                            <input type="number" id="stage-qty" min="1" placeholder="e.g. 100" oninput="handleStageShapeChange()">
-                                            <span class="field-hint" id="stage-avail-hint">Avail in Mumbai: 0 pcs</span>
+                                            <input type="number" id="stage-qty" min="1" placeholder="100" oninput="handleStageShapeChange()">
+                                            <span class="field-hint" id="stage-avail-hint">Avail: 0 pcs</span>
                                         </div>
-                                        <div class="form-control">
+                                        <div class="form-control flex-none max-w-120">
                                             <label for="stage-carat">Carat <span class="required">*</span></label>
-                                            <input type="number" id="stage-carat" min="0.001" step="0.001" placeholder="e.g. 12.50" oninput="handleStageShapeChange()">
-                                            <span class="field-hint" id="stage-carat-hint">Avail: 0.00 ct</span>
+                                            <input type="number" id="stage-carat" min="0.001" step="0.001" placeholder="12.5" oninput="handleStageShapeChange()">
+                                            <span class="field-hint" id="stage-carat-hint">Avail: 0 ct</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Dabbi: box select -->
                                 <div id="stage-dabbi-area" class="hidden">
-                                    <div class="form-group-row">
-                                        <div class="form-control flex-2">
+                                    <div class="form-group-row compact-stage-row">
+                                        <div class="form-control flex-none dabbi-pick-field">
                                             <label for="stage-item-select">Select Box</label>
                                             <select id="stage-item-select" onchange="handleStageItemChange()">
                                                 <!-- Dynamically populated from Mumbai Inventory -->

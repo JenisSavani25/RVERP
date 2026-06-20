@@ -604,6 +604,24 @@ body {
     grid-template-columns: repeat(4, 1fr);
 }
 
+.polish-shape-party-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--space-12);
+    align-items: start;
+}
+.polish-shape-party-row .shape-field {
+    min-width: 0;
+}
+@media (max-width: 1100px) {
+    .polish-shape-party-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .polish-shape-party-row .shape-field {
+        grid-column: 1 / -1;
+    }
+}
+
 .form-control {
     display: flex;
     flex-direction: column;
@@ -1196,6 +1214,29 @@ body {
 .ellipsis { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
 .max-w-120 { max-width: 120px !important; }
 .max-w-180 { max-width: 180px !important; }
+.max-w-160 { max-width: 160px !important; }
+.flex-none { flex: 0 0 auto !important; width: auto !important; }
+.vendor-issue-form .form-control.flex-none input,
+.vendor-issue-form .form-control.flex-none select {
+    width: 100%;
+}
+.vendor-issue-form .vendor-pick-field { max-width: 260px; min-width: 200px; }
+.vendor-issue-form .shape-pick-field { max-width: 200px; min-width: 160px; }
+.vendor-issue-form .dabbi-pick-field { max-width: 320px; min-width: 220px; }
+.vendor-issue-form .compact-issue-row,
+.vendor-issue-form .compact-stage-row {
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+}
+.vendor-issue-form .compact-staging {
+    padding: 12px;
+    margin-top: 8px;
+}
+.vendor-issue-form .field-hint {
+    font-size: 10px;
+    line-height: 1.2;
+}
 .text-teal { color: #0f766e !important; }
 .text-purple { color: #5b21b6 !important; }
 .text-cyan { color: #0891b2 !important; }

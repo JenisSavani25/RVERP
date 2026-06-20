@@ -61,9 +61,6 @@ function populateVendorDropdown() {
     }
 
     input.placeholder = "Type vendor name...";
-    if (!hidden || !hidden.value) {
-        setAutocompleteValue("issue-vendor-name", vendorsList[0].vendorId, "issue-vendor-id");
-    }
 }
 
 async function saveVendorMaster(event) {
@@ -204,7 +201,7 @@ function handleStageShapeChange() {
     const caratInput = document.getElementById("stage-carat");
 
     const avail = shapeName ? getPolishShapeMumbaiAvail(shapeName, stagedItems) : { pcs: 0, carat: 0 };
-    availHint.textContent = `Avail in Mumbai: ${avail.pcs} pcs`;
+    availHint.textContent = `Avail: ${avail.pcs} pcs`;
     if (caratHint) caratHint.textContent = `Avail: ${avail.carat.toFixed(2)} ct`;
     qtyInput.max = avail.pcs;
 
@@ -357,16 +354,11 @@ async function saveInventoryIssue(event) {
 
     const issueNo = document.getElementById("issue-no").value;
     const date = document.getElementById("issue-date").value;
-    const vendorId = document.getElementById("issue-vendor-id").value;
+    const vendor = resolveIssueVendorSelection();
+    const vendorId = vendor?.vendorId || document.getElementById("issue-vendor-id").value;
 
-    if (!vendorId) {
-        alert("Please register and select a vendor first!");
-        return;
-    }
-
-    const vendor = vendorsList.find(v => v.vendorId === vendorId);
-    if (!vendor) {
-        alert("Selected vendor not found!");
+    if (!vendorId || !vendor) {
+        alert("Please select a valid vendor from the list (type name and pick from suggestions).");
         return;
     }
 

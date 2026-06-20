@@ -1050,9 +1050,37 @@ function getDalalNameOptions() {
 function getVendorLookupOptions() {
     return (vendorsList || []).map(v => ({
         value: v.vendorId,
-        label: `${v.name} (${v.vendorType || "—"} - ${v.city || "—"})`,
+        label: (v.name || "").trim(),
+        display: `${v.name || "—"} · ${v.vendorType || "—"} · ${v.city || "—"}`,
         search: `${v.vendorId} ${v.name} ${v.vendorType || ""} ${v.city || ""} ${v.mobile || ""}`.toUpperCase()
-    })).sort((a, b) => a.label.localeCompare(b.label));
+    })).sort((a, b) => (a.label || "").localeCompare(b.label || ""));
+}
+
+function resolveLookupMatch(items, typed) {
+    const q = (typed || "").trim().toUpperCase();
+    if (!q) return null;
+
+    const exact = items.find(item =>
+        (item.label || "").toUpperCase() === q ||
+        String(item.value || "").toUpperCase() === q
+    );
+    if (exact) return exact;
+
+    const starts = items.filter(item => {
+        const label = (item.label || "").toUpperCase();
+        const search = (item.search != null ? item.search : `${item.value} ${item.label}`).toUpperCase();
+        return label.startsWith(q) || search.startsWith(q);
+    });
+    if (starts.length === 1) return starts[0];
+
+    const includes = items.filter(item => {
+        const label = (item.label || "").toUpperCase();
+        const search = (item.search != null ? item.search : `${item.value} ${item.label}`).toUpperCase();
+        return label.includes(q) || search.includes(q);
+    });
+    if (includes.length === 1) return includes[0];
+
+    return null;
 }
 
 function escapeHtml(str) {
@@ -1117,12 +1145,13 @@ function initAutocomplete(inputId, getOptionsFn, config = {}) {
         return (raw || []).map(item => {
             if (typeof item === "string") {
                 const v = item.trim().toUpperCase();
-                return { value: v, label: v, search: v };
+                return { value: v, label: v, display: v, search: v };
             }
             const label = item.label || item.value || "";
             const value = item.value != null ? item.value : label;
             const search = item.search != null ? item.search : `${value} ${label}`;
-            return { value, label, search };
+            const display = item.display != null ? item.display : label;
+            return { value, label, display, search };
         });
     }
 
@@ -1161,9 +1190,10 @@ function initAutocomplete(inputId, getOptionsFn, config = {}) {
             return;
         }
 
-        list.innerHTML = currentItems.map((item, i) =>
-            `<div class="name-autocomplete-item" role="option" data-index="${i}" data-value="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div>`
-        ).join("");
+        list.innerHTML = currentItems.map((item, i) => {
+            const text = escapeHtml(item.display || item.label);
+            return `<div class="name-autocomplete-item" role="option" data-index="${i}" data-value="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}">${text}</div>`;
+        }).join("");
         list.classList.remove("hidden");
     }
 
@@ -1214,15 +1244,12 @@ function initAutocomplete(inputId, getOptionsFn, config = {}) {
             list.classList.add("hidden");
             activeIndex = -1;
             if (!hidden) return;
-            const typed = (input.value || "").trim().toUpperCase();
+            const typed = (input.value || "").trim();
             if (!typed) {
                 hidden.value = "";
                 return;
             }
-            const match = getItems().find(item =>
-                (item.label || "").toUpperCase() === typed ||
-                String(item.value || "").toUpperCase() === typed
-            );
+            const match = resolveLookupMatch(getItems(), typed);
             if (match) {
                 input.value = match.label;
                 hidden.value = match.value;
@@ -1302,9 +1329,37 @@ function initVendorIssueAutocomplete(selectedVendorId) {
     });
     if (selectedVendorId) {
         setAutocompleteValue("issue-vendor-name", selectedVendorId, "issue-vendor-id");
-    } else if (vendorsList.length > 0) {
-        setAutocompleteValue("issue-vendor-name", vendorsList[0].vendorId, "issue-vendor-id");
     }
+}
+
+/** Resolve vendor pick from issue form (name autocomplete + hidden id). */
+function resolveIssueVendorSelection() {
+    const input = document.getElementById("issue-vendor-name");
+    const hidden = document.getElementById("issue-vendor-id");
+    if (!input) return null;
+
+    if (hidden?.value) {
+        const byId = (vendorsList || []).find(v => v.vendorId === hidden.value);
+        if (byId) {
+            input.value = byId.name || input.value;
+            return byId;
+        }
+    }
+
+    const typed = (input.value || "").trim();
+    if (!typed) return null;
+
+    const match = resolveLookupMatch(
+        normalizeAutocompleteItemsForLookup(getVendorLookupOptions()),
+        typed
+    );
+    if (match) {
+        if (hidden) hidden.value = match.value;
+        input.value = match.label;
+        return (vendorsList || []).find(v => v.vendorId === match.value) || null;
+    }
+
+    return (vendorsList || []).find(v => (v.name || "").toUpperCase() === typed.toUpperCase()) || null;
 }
 
 async function saveVendorIssueOnServer(newIssue) {

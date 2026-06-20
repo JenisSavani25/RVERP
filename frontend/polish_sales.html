@@ -113,7 +113,7 @@
                             <!-- GENERAL ENTRY DETAILS -->
                             <div class="form-section full-width">
                                 <h3 class="section-title">General Details</h3>
-                                <div class="form-group-row">
+                                <div class="form-group-row three-cols">
                                     <div class="form-control">
                                         <label for="selling-no">Selling Number <span class="required">*</span></label>
                                         <input type="number" id="selling-no" required min="1" placeholder="e.g. 1">
@@ -131,8 +131,8 @@
                                         <input type="number" id="carat" required min="0.001" step="0.001" placeholder="e.g. 3.20" oninput="calculateFormPrices()">
                                     </div>
                                 </div>
-                                <div class="form-group-row">
-                                    <div class="form-control flex-2">
+                                <div class="form-group-row polish-shape-party-row">
+                                    <div class="form-control shape-field">
                                         <label for="sale-shape-name">Shape <span class="required">*</span></label>
                                         <select id="sale-shape-name" required onchange="handleSaleShapeChange()">
                                             <option value="">— Select Shape —</option>
@@ -149,8 +149,8 @@
                                         </select>
                                         <span class="field-hint" id="sale-shape-avail-hint">Select shape to see Mumbai stock</span>
                                     </div>
-                                </div>
-                                <div class="form-group-row">
+                                    <div class="form-control">
+                                        <label for="dalal">Dalal (Broker) <span class="required">*</span></label>
                                         <input type="text" id="dalal" required placeholder="Type to search dalal..." autocomplete="off">
                                     </div>
                                     <div class="form-control">
