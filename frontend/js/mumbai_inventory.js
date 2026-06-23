@@ -1,9 +1,34 @@
 // --- MUMBAI INVENTORY LOGIC ---
 
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadAllDataFromServer();
+    const ok = await loadAllDataFromServer({ force: true });
     renderMumbaiInventory();
+    const syncEl = document.getElementById("mumbai-last-sync");
+    if (syncEl && ok !== false) {
+        syncEl.textContent = `Synced ${new Date().toLocaleTimeString()}`;
+    }
 });
+
+async function reloadMumbaiInventoryFromServer() {
+    const btn = document.getElementById("mumbai-refresh-btn");
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Refreshing…";
+    }
+    const ok = await refreshAllDataFromServer();
+    renderMumbaiInventory();
+    const syncEl = document.getElementById("mumbai-last-sync");
+    if (syncEl) {
+        syncEl.textContent = ok
+            ? `Synced ${new Date().toLocaleTimeString()}`
+            : "Sync failed";
+        syncEl.style.color = ok ? "#94a3b8" : "#dc2626";
+    }
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = "↻ Refresh";
+    }
+}
 
 function fmtShapeQty(pcs, carat) {
     const ct = parseFloat(carat) || 0;

@@ -11,6 +11,14 @@ function getSaleSourceLocation() {
     return prefilledSourceLocation || 'Mumbai';
 }
 
+/** Polish sales only: final receivable = net bill + net cash − dalali (not added). */
+function calculatePolishSaleFinalAmount(netBill, netCash, dalaliAmt) {
+    const bill = Math.max(0, parseFloat(netBill) || 0);
+    const cash = Math.max(0, parseFloat(netCash) || 0);
+    const broker = Math.max(0, parseFloat(dalaliAmt) || 0);
+    return Math.max(0, Math.round(bill + cash - broker));
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     await loadAllDataFromServer();
     // Load shared data
@@ -165,8 +173,8 @@ function calculateFormPrices() {
     const netBillAmount = calculateNetBillAmount(billAmount, gstAmount);
     const netCashAmount = cashAmount;
     
-    // Final Amount = Net Bill + Net Cash + Dalali
-    const finalAmount = calculateFinalAmount(netBillAmount, netCashAmount, dalaliAmount);
+    // Final Amount = Net Bill + Net Cash − Dalali (polish sales only)
+    const finalAmount = calculatePolishSaleFinalAmount(netBillAmount, netCashAmount, dalaliAmount);
 
     // Update Split labels
     document.getElementById("label-bill-amt").textContent = formatCurrency(billAmount);
@@ -472,13 +480,13 @@ function validateForm() {
         const gst = calculateGST(billAmount, 0.015);
         const netBillAmount = calculateNetBillAmount(billAmount, gst);
         const netCashAmount = cashAmount;
-        const finalAmount = calculateFinalAmount(netBillAmount, netCashAmount, dalaliAmount);
+        const finalAmount = calculatePolishSaleFinalAmount(netBillAmount, netCashAmount, dalaliAmount);
         
         if (initialPaymentType === "Bill" && initialReceived > (netBillAmount + 0.01)) {
             showFieldError(initialReceivedInput, `Received amount exceeds the Net Bill Amount of ${formatCurrency(netBillAmount)}.`);
             isValid = false;
-        } else if (initialPaymentType === "Cash" && initialReceived > (netCashAmount + dalaliAmount + 0.01)) {
-            showFieldError(initialReceivedInput, `Received amount exceeds the Cash + Brokerage (Dalali) Amount of ${formatCurrency(netCashAmount + dalaliAmount)}.`);
+        } else if (initialPaymentType === "Cash" && initialReceived > (netCashAmount + 0.01)) {
+            showFieldError(initialReceivedInput, `Received amount exceeds the Net Cash Amount of ${formatCurrency(netCashAmount)}.`);
             isValid = false;
         } else if (initialReceived > (finalAmount + 0.01)) {
             showFieldError(initialReceivedInput, `Received amount exceeds the final outstanding amount of ${formatCurrency(finalAmount)}.`);
@@ -540,7 +548,7 @@ async function saveSaleEntry(event) {
     const netBillAmount = calculateNetBillAmount(billAmount, gst);
     const netCashAmount = cashAmount;
     
-    const finalAmount = calculateFinalAmount(netBillAmount, netCashAmount, dalaliAmount);
+    const finalAmount = calculatePolishSaleFinalAmount(netBillAmount, netCashAmount, dalaliAmount);
 
     const initialPaymentType = document.getElementById("initial-payment-type").value;
     const initialReceived = parseFloat(document.getElementById("initial-received").value) || 0;
@@ -550,14 +558,12 @@ async function saveSaleEntry(event) {
     const payments = [];
     if (initialPaymentType !== "Pending" && initialReceived > 0) {
         if (initialPaymentType === "Both") {
-            const totalAmt = netBillAmount + netCashAmount + (dalaliAmount || 0);
+            const totalAmt = netBillAmount + netCashAmount;
             let billPart = 0;
-            let dalaliPart = 0;
             let cashPart = 0;
             if (totalAmt > 0) {
                 billPart = Math.round(initialReceived * (netBillAmount / totalAmt));
-                dalaliPart = Math.round(initialReceived * ((dalaliAmount || 0) / totalAmt));
-                cashPart = Math.round(initialReceived - billPart - dalaliPart);
+                cashPart = Math.round(initialReceived - billPart);
             }
             
             if (billPart > 0) {
@@ -578,36 +584,14 @@ async function saveSaleEntry(event) {
                     remarks: remarks ? `${remarks} (Auto-split Cash)` : 'Auto-split Cash portion'
                 });
             }
-            if (dalaliPart > 0) {
-                payments.push({
-                    id: 'pay_' + (Date.now() + 2) + '_init_dalali',
-                    date: sellingDate,
-                    type: 'Dalali',
-                    amount: dalaliPart,
-                    remarks: remarks ? `${remarks} (Auto-split Dalali)` : 'Auto-split Dalali portion'
-                });
-            }
         } else if (initialPaymentType === "Cash") {
-            const cashPart = Math.min(initialReceived, netCashAmount);
-            const dalaliPart = Math.round(initialReceived - cashPart);
-            if (cashPart > 0) {
-                payments.push({
-                    id: 'pay_' + Date.now() + '_init_cash',
-                    date: sellingDate,
-                    type: 'Cash',
-                    amount: cashPart,
-                    remarks: remarks || 'Initial Cash payment'
-                });
-            }
-            if (dalaliPart > 0) {
-                payments.push({
-                    id: 'pay_' + (Date.now() + 1) + '_init_dalali',
-                    date: sellingDate,
-                    type: 'Dalali',
-                    amount: dalaliPart,
-                    remarks: remarks || 'Initial Dalali payment'
-                });
-            }
+            payments.push({
+                id: 'pay_' + Date.now() + '_init_cash',
+                date: sellingDate,
+                type: 'Cash',
+                amount: initialReceived,
+                remarks: remarks || 'Initial Cash payment'
+            });
         } else {
             payments.push({
                 id: 'pay_' + Date.now() + '_init',

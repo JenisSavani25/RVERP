@@ -232,25 +232,83 @@ function invalidateServerStateCache() {
     } catch {
         // Ignore
     }
+    isLoadedFromServer = false;
 }
 
-async function loadAllDataFromServer() {
-    if (isLoadedFromServer) return;
-    const cachedData = readCachedServerState();
-    if (cachedData) {
-        applyServerState(cachedData);
-        return;
-    }
+/** Mirror in-memory server state into localStorage so offline fallback stays in sync. */
+function syncListsToLocalStorage() {
+    if (!isLoadedFromServer) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/all-data`);
+        localStorage.setItem("rv_gems_sales", JSON.stringify(salesList));
+        localStorage.setItem("rv_gems_buys", JSON.stringify(buysList));
+        localStorage.setItem("rv_gems_polish_sales", JSON.stringify(polishSalesList));
+        localStorage.setItem("rv_gems_polish_buys", JSON.stringify(polishBuysList));
+        localStorage.setItem("rv_gems_box_making", JSON.stringify(boxMakingList));
+        localStorage.setItem("rv_gems_box_selling", JSON.stringify(boxSellingList));
+        localStorage.setItem("rv_gems_conversions", JSON.stringify(conversionList));
+        localStorage.setItem("rv_gems_transfers", JSON.stringify(transfersList));
+        localStorage.setItem("rv_gems_vendors", JSON.stringify(vendorsList));
+        localStorage.setItem("rv_gems_issues", JSON.stringify(issuesList));
+    } catch {
+        // Ignore quota errors
+    }
+}
+
+function loadAllListsFromLocalStorage() {
+    isLoadedFromServer = false;
+    loadSalesData();
+    loadBuysData();
+    loadPolishSalesData();
+    loadPolishBuysData();
+    loadBoxMakingData();
+    loadBoxSellingData();
+    loadConversionData();
+    loadTransferData();
+    loadVendorData();
+    loadIssueData();
+}
+
+/**
+ * Load ERP state from API. Pass { force: true } to bypass session cache and
+ * refetch (use on inventory pages after DB changes or direct SQL edits).
+ */
+async function loadAllDataFromServer(options = {}) {
+    const force = options.force === true;
+
+    if (!force && isLoadedFromServer) return;
+
+    if (force) {
+        invalidateServerStateCache();
+    } else {
+        const cachedData = readCachedServerState();
+        if (cachedData) {
+            applyServerState(cachedData);
+            return;
+        }
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/all-data`, { cache: "no-store" });
         if (!response.ok) throw new Error("HTTP error! status: " + response.status);
         const data = await response.json();
         applyServerState(data);
         writeCachedServerState(data);
+        syncListsToLocalStorage();
         console.log("ERP state loaded successfully from PostgreSQL backend!");
+        return true;
     } catch (e) {
-        console.error("Backend fetch failed, falling back to LocalStorage:", e);
+        console.error("Backend fetch failed:", e);
+        if (!isLoadedFromServer) {
+            console.warn("Falling back to LocalStorage (may be outdated if DB was edited directly).");
+            loadAllListsFromLocalStorage();
+        }
+        return false;
     }
+}
+
+/** Force-refresh from server — use after direct DB edits or when stock looks wrong. */
+async function refreshAllDataFromServer() {
+    return loadAllDataFromServer({ force: true });
 }
 
 // One-time migration to clear historical sample and seeded data from LocalStorage
@@ -942,6 +1000,35 @@ async function updatePolishLotOnServer(buyingNo, data)  { return putRecordOnServ
 async function updatePolishSaleOnServer(sellingNo, data){ return putRecordOnServer(`polish-sales/${sellingNo}`, data, "polish sale update"); }
 async function updateBoxSaleOnServer(sellingNo, data)   { return putRecordOnServer(`box-sales/${sellingNo}`, data, "box sale update"); }
 
+// ── Password-protected delete (shared across Records, Ledger, Master Data) ──
+const RECORD_DELETE_PASSWORD = "vikas000";
+
+function confirmRecordDeletePassword() {
+    const entered = prompt("Enter password to delete this record:");
+    if (entered === null) return false;
+    if (entered !== RECORD_DELETE_PASSWORD) {
+        alert("Incorrect password. The record was NOT deleted.");
+        return false;
+    }
+    return true;
+}
+
+async function deleteRecordWithPassword(id, type, options = {}) {
+    if (!confirmRecordDeletePassword()) return false;
+    const confirmMsg = options.confirmMessage
+        || "This will permanently delete this record. This cannot be undone.\n\nProceed?";
+    if (!confirm(confirmMsg)) return false;
+    try {
+        await deleteRecordOnServer(type, id);
+        await refreshAllDataFromServer();
+        if (options.onSuccess) await options.onSuccess();
+        return true;
+    } catch (e) {
+        alert("Could not delete this record.\n\n" + e.message);
+        return false;
+    }
+}
+
 // ── Delete a transaction record by its records-tab type + id ──
 async function deleteRecordOnServer(type, id) {
     const map = {
@@ -949,14 +1036,21 @@ async function deleteRecordOnServer(type, id) {
         sales: 'rough-sales',
         polish_buys: 'polish-lots',
         polish_sales: 'polish-sales',
-        box_selling: 'box-sales'
+        box_selling: 'box-sales',
+        box_making: 'boxes',
+        transfers: 'transfers',
+        conversions: 'conversions',
+        vendor_issues: 'vendor-issues',
+        parties: 'parties',
+        vendors: 'vendors',
+        payments: 'payments'
     };
     const path = map[type];
     if (!path) throw new Error("Unknown record type: " + type);
 
     let response;
     try {
-        response = await fetch(`${API_BASE_URL}/${path}/${id}`, { method: 'DELETE' });
+        response = await fetch(`${API_BASE_URL}/${path}/${encodeURIComponent(id)}`, { method: 'DELETE' });
     } catch (networkErr) {
         throw new Error("Network/CORS error reaching the server: " + networkErr.message);
     }

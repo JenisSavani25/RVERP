@@ -189,8 +189,23 @@ function renderRecentConversions() {
             <td>${pCarat ? pCarat.toFixed(3) : '—'}</td>
             <td>${npPcs}</td>
             <td>${amount ? formatCurrency(Math.round(amount)) : '—'}</td>
+            <td>
+                <button type="button" class="btn btn-danger btn-compact"
+                    onclick="deleteConversionRecord(${c.id})">🗑️ Delete</button>
+            </td>
         </tr>`;
     }).join('');
+}
+
+async function deleteConversionRecord(id) {
+    const ok = await deleteRecordWithPassword(id, 'conversions', {
+        confirmMessage: "This will remove the conversion and affect Surat polish stock.\n\nProceed?",
+        onSuccess: () => {
+            onRoughBuySelected();
+            renderRecentConversions();
+        }
+    });
+    if (ok) alert("Conversion deleted successfully.");
 }
 
 // ── Small helpers ──

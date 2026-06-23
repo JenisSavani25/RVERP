@@ -94,6 +94,8 @@
                 <h1 id="page-title">Inventory Management</h1>
             </div>
             <div class="header-right">
+                <span id="inv-last-sync" class="last-sync-span"></span>
+                <button type="button" class="btn btn-secondary" id="inv-refresh-btn" onclick="reloadInventoryFromServer()">↻ Refresh Stock</button>
                 <button class="btn btn-secondary" onclick="window.location.href='index.html'"> Dashboard</button>
             </div>
         </header>

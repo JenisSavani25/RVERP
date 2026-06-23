@@ -322,6 +322,14 @@ function renderTransferLog() {
         tdRemarks.textContent = t.remarks || "—";
         tdRemarks.className = "text-muted";
 
+        const tdDelete = document.createElement("td");
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn btn-danger btn-compact";
+        delBtn.textContent = "🗑️ Delete";
+        const transferKey = t.id != null ? t.id : t.transferNo;
+        delBtn.onclick = () => deleteTransferRecord(transferKey);
+        tdDelete.appendChild(delBtn);
+
         tr.appendChild(tdDate);
         tr.appendChild(tdNo);
         tr.appendChild(tdType);
@@ -329,9 +337,21 @@ function renderTransferLog() {
         tr.appendChild(tdTo);
         tr.appendChild(tdDetails);
         tr.appendChild(tdRemarks);
+        tr.appendChild(tdDelete);
 
         tbody.appendChild(tr);
     });
+}
+
+async function deleteTransferRecord(key) {
+    const ok = await deleteRecordWithPassword(key, 'transfers', {
+        confirmMessage: "Deleting this transfer will restore stock at the source location.\n\nProceed?",
+        onSuccess: () => {
+            populateSelections();
+            renderTransferLog();
+        }
+    });
+    if (ok) alert("Transfer deleted successfully.");
 }
 
 function filterDabbiList() {

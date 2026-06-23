@@ -504,8 +504,27 @@ function renderConsignments() {
         tr.appendChild(tdAging);
         tr.appendChild(tdItems);
 
+        const tdDelete = document.createElement("td");
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn btn-danger btn-compact";
+        delBtn.textContent = "🗑️ Delete";
+        delBtn.onclick = () => deleteVendorIssueRecord(iss.issueNo);
+        tdDelete.appendChild(delBtn);
+        tr.appendChild(tdDelete);
+
         tbody.appendChild(tr);
     });
+}
+
+async function deleteVendorIssueRecord(issueNo) {
+    const ok = await deleteRecordWithPassword(issueNo, 'vendor_issues', {
+        confirmMessage: "This will delete the entire consignment issue and return stock logic will update on refresh.\n\nProceed?",
+        onSuccess: () => {
+            renderConsignments();
+            handleStageTypeChange();
+        }
+    });
+    if (ok) alert("Consignment deleted successfully.");
 }
 
 async function returnConsignedItem(issueNo, itemToReturn) {

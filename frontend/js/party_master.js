@@ -102,6 +102,9 @@ function renderPartyMaster(query) {
     tbody.innerHTML = rows.map(p => {
         const clickable = p.id != null;
         const attrs = clickable ? `style="cursor:pointer;" title="Click to edit" onclick="editParty(${p.id})"` : "";
+        const deleteBtn = p.id != null
+            ? `<button type="button" class="btn btn-danger btn-compact" onclick="event.stopPropagation(); deletePartyRecord(${p.id})">🗑️ Delete</button>`
+            : '—';
         return `<tr ${attrs}>
         <td class="font-bold">${p.name}</td>
         <td class="text-right font-mono">${p.txns}</td>
@@ -109,8 +112,17 @@ function renderPartyMaster(query) {
         <td class="text-right font-mono">${formatCurrency(Math.round(p.sales))}</td>
         <td class="text-right font-mono ${p.receivable > 0 ? 'text-orange font-bold' : ''}">${formatCurrency(Math.round(p.receivable))}</td>
         <td class="text-right font-mono ${p.payable > 0 ? 'text-danger font-bold' : ''}">${formatCurrency(Math.round(p.payable))}</td>
+        <td>${deleteBtn}</td>
     </tr>`;
     }).join('');
+}
+
+async function deletePartyRecord(id) {
+    const ok = await deleteRecordWithPassword(id, 'parties', {
+        confirmMessage: "Delete this party from master data? Parties linked to transactions cannot be deleted.\n\nProceed?",
+        onSuccess: () => renderPartyMaster(document.getElementById("pm-search")?.value || "")
+    });
+    if (ok) alert("Party deleted successfully.");
 }
 
 function editParty(id) {

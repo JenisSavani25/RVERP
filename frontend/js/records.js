@@ -17,15 +17,7 @@ function getLedgerType(tabId) {
 // INIT
 // ─────────────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadAllDataFromServer();
-    loadSalesData();
-    loadBuysData();
-    loadPolishSalesData();
-    loadPolishBuysData();
-    loadBoxMakingData();
-    loadBoxSellingData();
-    loadTransferData();
-    loadIssueData();
+    await loadAllDataFromServer({ force: true });
 
     buildAllPanels();
     renderAllTabs();
@@ -176,6 +168,10 @@ function renderTransactionTab(tabId, entries, mode, accentColor) {
                     onclick="event.stopPropagation(); toggleActionMenu(this, '${e.sellingNo || e.buyingNo}', '${ledgerType}')">
                     ⋯ Actions
                 </button>
+                <button class="btn btn-danger btn-compact"
+                    onclick="event.stopPropagation(); recDeleteRecord('${e.sellingNo || e.buyingNo}', '${ledgerType}')">
+                    🗑️ Delete
+                </button>
             </td>
             <td class="chevron-cell" id="chevron-${rowKey}">›</td>
         </tr>
@@ -238,6 +234,7 @@ function renderBoxMakingTab() {
         <th class="num">M.Price/ct</th>
         <th class="num">M.Value</th>
         <th>Status</th>
+        <th>Actions</th>
     </tr>`;
 
     const tbody = document.getElementById(`tbody-${tabId}`);
@@ -277,9 +274,15 @@ function renderBoxMakingTab() {
             <td class="num">${formatCurrency(Math.round(mPrice))}</td>
             <td class="num font-bold">${formatCurrency(Math.round(mValue))}</td>
             <td><span class="status-pill ${status}">${status === 'sold' ? '✓ SOLD' : '● AVAILABLE'}</span></td>
+            <td>
+                <button class="btn btn-danger btn-compact"
+                    onclick="event.stopPropagation(); recDeleteRecord('${encodeURIComponent(e.idNo)}', 'box_making', 'This box will be removed from inventory. Cannot delete if sold or transferred.\\n\\nProceed?')">
+                    🗑️ Delete
+                </button>
+            </td>
         </tr>
         <tr class="detail-row hidden" id="detail-${rowKey}">
-            <td colspan="12" id="detail-inner-${rowKey}"></td>
+            <td colspan="13" id="detail-inner-${rowKey}"></td>
         </tr>`;
     }).join('');
 
@@ -289,6 +292,7 @@ function renderBoxMakingTab() {
         <td class="num">${totalCt.toFixed(3)}</td>
         <td></td>
         <td class="num">${formatCurrency(Math.round(totalMVal))}</td>
+        <td></td>
         <td></td>
     </tr>`;
 
@@ -379,6 +383,10 @@ function renderBoxSellingTab() {
                 <button class="btn btn-secondary btn-compact"
                     onclick="event.stopPropagation(); toggleActionMenu(this, '${e.sellingNo}', 'box_selling')">
                     ⋯ Actions
+                </button>
+                <button class="btn btn-danger btn-compact"
+                    onclick="event.stopPropagation(); recDeleteRecord('${e.sellingNo}', 'box_selling')">
+                    🗑️ Delete
                 </button>
             </td>
             <td class="chevron-cell" id="chevron-${rowKey}">›</td>
@@ -677,6 +685,7 @@ function renderTransfersTab() {
         <th>To Location</th>
         <th>Details</th>
         <th>Remarks</th>
+        <th>Actions</th>
     </tr>`;
 
     // Stats
@@ -717,6 +726,8 @@ function renderTransfersTab() {
             searchStr += ` ${boxes}`;
         }
 
+        const transferId = t.id != null ? t.id : t.transferNo;
+
         return `<tr class="data-row" data-search="${searchStr}">
             <td class="accent-cell"><span class="accent-bar" style="background:#0284c7;"></span></td>
             <td>${fmtDate(t.date)}</td>
@@ -726,6 +737,12 @@ function renderTransfersTab() {
             <td>${t.toLocation}</td>
             <td>${details}</td>
             <td class="text-muted">${t.remarks || '—'}</td>
+            <td>
+                <button class="btn btn-danger btn-compact"
+                    onclick="recDeleteRecord('${transferId}', 'transfers', 'Deleting this transfer will restore stock at the source location.\\n\\nProceed?')">
+                    🗑️ Delete
+                </button>
+            </td>
         </tr>`;
     }).join('');
 }
@@ -752,6 +769,7 @@ function renderConversionsTab() {
         <th>Not Polished (Pcs / Ct)</th>
         <th>Rate</th>
         <th>Amount</th>
+        <th>Actions</th>
     </tr>`;
 
     // Stats
@@ -802,14 +820,19 @@ function renderConversionsTab() {
             <td>${npPcs} pcs / ${npCt.toFixed(3)} ct</td>
             <td>${rate ? formatCurrency(Math.round(rate)) : '—'}</td>
             <td>${amount ? formatCurrency(Math.round(amount)) : '—'}</td>
+            <td>
+                <button class="btn btn-danger btn-compact"
+                    onclick="recDeleteRecord('${c.id}', 'conversions', 'This will remove the conversion and affect Surat polish stock.\\n\\nProceed?')">
+                    🗑️ Delete
+                </button>
+            </td>
         </tr>`;
     }).join('');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ROW ACTION MENU (Ledger / Edit / Delete) + password-protected delete
+// ROW ACTION MENU (Ledger / Edit) + password-protected delete
 // ─────────────────────────────────────────────────────────────────────────────
-const RECORD_DELETE_PASSWORD = "vikas000";
 const EDIT_PAGE = {
     buys: 'rough_buy.html',
     sales: 'rough_sales.html',
@@ -817,6 +840,20 @@ const EDIT_PAGE = {
     polish_sales: 'polish_sales.html',
     box_selling: 'box_selling.html'
 };
+
+const PAYMENT_RECORD_TYPES = new Set(['buys', 'sales', 'polish_buys', 'polish_sales', 'box_selling']);
+
+async function recDeleteRecord(id, type, customConfirm) {
+    const decodedId = typeof id === 'string' ? decodeURIComponent(id) : id;
+    const confirmMessage = customConfirm || (PAYMENT_RECORD_TYPES.has(type)
+        ? "This will permanently delete the record and its payment history. This cannot be undone.\n\nProceed?"
+        : undefined);
+    const ok = await deleteRecordWithPassword(decodedId, type, {
+        confirmMessage,
+        onSuccess: () => renderAllTabs()
+    });
+    if (ok) alert("Record deleted successfully.");
+}
 
 let openActionMenuEl = null;
 
@@ -833,8 +870,7 @@ function toggleActionMenu(btn, id, type) {
     menu.dataset.owner = `${type}-${id}`;
     menu.innerHTML = `
         <button type="button" onclick="recAction('ledger', '${id}', '${type}')">📄 Ledger</button>
-        <button type="button" onclick="recAction('edit', '${id}', '${type}')">✏️ Edit</button>
-        <button type="button" class="danger" onclick="recAction('delete', '${id}', '${type}')">🗑️ Delete</button>`;
+        <button type="button" onclick="recAction('edit', '${id}', '${type}')">✏️ Edit</button>`;
     document.body.appendChild(menu);
 
     const rect = btn.getBoundingClientRect();
@@ -872,26 +908,5 @@ function recAction(action, id, type) {
         const page = EDIT_PAGE[type];
         if (!page) { alert("Editing is not available for this record type."); return; }
         window.location.href = `${page}?edit=${id}`;
-    } else if (action === 'delete') {
-        deleteRecordWithPassword(id, type);
-    }
-}
-
-async function deleteRecordWithPassword(id, type) {
-    const entered = prompt("Enter password to delete this record:");
-    if (entered === null) return; // user cancelled
-    if (entered !== RECORD_DELETE_PASSWORD) {
-        alert("Incorrect password. The record was NOT deleted.");
-        return;
-    }
-    if (!confirm("This will permanently delete the record and its payment history. This cannot be undone.\n\nProceed?")) {
-        return;
-    }
-    try {
-        await deleteRecordOnServer(type, id);
-        alert("Record deleted successfully.");
-        window.location.reload();
-    } catch (e) {
-        alert("Could not delete this record.\n\n" + e.message);
     }
 }

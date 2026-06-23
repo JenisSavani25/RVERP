@@ -383,6 +383,7 @@ async function addPaymentEntry(event) {
 }
 
 async function deletePayment(paymentId) {
+    if (!confirmRecordDeletePassword()) return;
     if (!confirm("Are you sure you want to delete this payment record?")) return;
     
     const sale = currentTransactionList.find(item => {
@@ -395,6 +396,7 @@ async function deletePayment(paymentId) {
     
     try {
         await deletePaymentOnServer(paymentId);
+        await refreshAllDataFromServer();
         loadTransactionLedger(currentActiveTransactionId);
     } catch (e) {
         sale.payments = existingPayments;

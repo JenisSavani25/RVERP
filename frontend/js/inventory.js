@@ -15,20 +15,37 @@ let activeFilter = 'all';
 // INIT
 // ──────────────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadAllDataFromServer();
-    // Load all data sources
-    loadSalesData();
-    loadBuysData();
-    loadPolishSalesData();
-    loadPolishBuysData();
-    loadBoxMakingData();
-    loadBoxSellingData();
-    loadConversionData();
-    loadTransferData();
-
-    // Render everything
+    const ok = await loadAllDataFromServer({ force: true });
     refreshInventory();
+    const syncEl = document.getElementById("inv-last-sync");
+    if (syncEl && ok !== false) {
+        syncEl.textContent = `Synced ${new Date().toLocaleTimeString()}`;
+    }
 });
+
+async function reloadInventoryFromServer() {
+    const btn = document.getElementById("inv-refresh-btn");
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Refreshing…";
+    }
+    const ok = await refreshAllDataFromServer();
+    refreshInventory();
+    const syncEl = document.getElementById("inv-last-sync");
+    if (syncEl) {
+        syncEl.textContent = ok
+            ? `Synced ${new Date().toLocaleTimeString()}`
+            : "Sync failed — check connection";
+        syncEl.style.color = ok ? "#94a3b8" : "#dc2626";
+    }
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = "↻ Refresh Stock";
+    }
+    if (!ok) {
+        alert("Could not refresh from server. Stock may show cached data.\n\nIf you deleted records in the database directly, fix the connection and click Refresh again.");
+    }
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // MAIN REFRESH — recalculates and re-renders everything

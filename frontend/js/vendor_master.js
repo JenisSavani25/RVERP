@@ -76,8 +76,23 @@ function renderVendorMaster(query) {
             <td>${v.city || '—'}</td>
             <td class="font-mono">${v.mobile || '—'}</td>
             <td>${added}</td>
+            <td>
+                <button type="button" class="btn btn-danger btn-compact" onclick="event.stopPropagation(); deleteVendorRecord('${v.vendorId}')">🗑️ Delete</button>
+            </td>
         </tr>`;
     }).join('');
+}
+
+async function deleteVendorRecord(vendorId) {
+    const ok = await deleteRecordWithPassword(vendorId, 'vendors', {
+        confirmMessage: "Delete this vendor from master data? Vendors linked to transactions cannot be deleted.\n\nProceed?",
+        onSuccess: () => {
+            renderVendorStats();
+            renderVendorMaster(document.getElementById("vm-search")?.value || "");
+            setNextVendorId();
+        }
+    });
+    if (ok) alert("Vendor deleted successfully.");
 }
 
 function editVendor(vendorId) {

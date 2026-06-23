@@ -1080,6 +1080,117 @@ namespace backend.Controllers
             return Ok(new { success = true });
         }
 
+        [HttpDelete("transfers/{key}")]
+        public async Task<IActionResult> DeleteTransfer(string key)
+        {
+            Transfer? entity;
+            if (int.TryParse(key, out var id))
+            {
+                entity = await _context.Transfers
+                    .Include(t => t.Items)
+                    .FirstOrDefaultAsync(t => t.Id == id);
+            }
+            else
+            {
+                entity = await _context.Transfers
+                    .Include(t => t.Items)
+                    .FirstOrDefaultAsync(t => t.TransferNo == key);
+            }
+            if (entity == null) return NotFound("Transfer not found");
+
+            _context.TransferItems.RemoveRange(entity.Items);
+            _context.Transfers.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("conversions/{id:int}")]
+        public async Task<IActionResult> DeleteConversion(int id)
+        {
+            var entity = await _context.Conversions.FirstOrDefaultAsync(c => c.Id == id);
+            if (entity == null) return NotFound("Conversion not found");
+
+            _context.Conversions.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("boxes/{boxId}")]
+        public async Task<IActionResult> DeleteBox(string boxId)
+        {
+            var entity = await _context.Boxes
+                .Include(b => b.BoxItems)
+                .FirstOrDefaultAsync(b => b.BoxId == boxId);
+            if (entity == null) return NotFound("Box not found");
+
+            if (await _context.BoxSaleItems.AnyAsync(si => si.BoxId == boxId))
+                return BadRequest("Cannot delete: this box has been sold.");
+
+            if (await _context.TransferItems.AnyAsync(ti => ti.BoxId == boxId))
+                return BadRequest("Cannot delete: this box was included in a transfer.");
+
+            if (await _context.VendorIssueItems.AnyAsync(vi => vi.BoxId == boxId))
+                return BadRequest("Cannot delete: this box is on vendor consignment.");
+
+            _context.BoxItems.RemoveRange(entity.BoxItems);
+            _context.Boxes.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("vendor-issues/{issueNo}")]
+        public async Task<IActionResult> DeleteVendorIssue(string issueNo)
+        {
+            var entity = await _context.VendorIssues
+                .Include(i => i.Items)
+                .FirstOrDefaultAsync(i => i.IssueNo == issueNo);
+            if (entity == null) return NotFound("Vendor issue not found");
+
+            _context.VendorIssueItems.RemoveRange(entity.Items);
+            _context.VendorIssues.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("parties/{id:int}")]
+        public async Task<IActionResult> DeleteParty(int id)
+        {
+            var entity = await _context.Parties.FirstOrDefaultAsync(p => p.Id == id);
+            if (entity == null) return NotFound("Party not found");
+
+            var inUse = await _context.RoughBuys.AnyAsync(r => r.PartyId == id)
+                || await _context.RoughSales.AnyAsync(r => r.PartyId == id)
+                || await _context.PolishLots.AnyAsync(r => r.PartyId == id)
+                || await _context.PolishSales.AnyAsync(r => r.PartyId == id)
+                || await _context.BoxSales.AnyAsync(r => r.PartyId == id);
+            if (inUse)
+                return BadRequest("Cannot delete: this party is linked to existing transactions.");
+
+            _context.Parties.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("vendors/{vendorNo}")]
+        public async Task<IActionResult> DeleteVendor(string vendorNo)
+        {
+            var entity = await _context.Vendors.FirstOrDefaultAsync(v => v.VendorNo == vendorNo);
+            if (entity == null) return NotFound("Vendor not found");
+
+            var inUse = await _context.RoughBuys.AnyAsync(r => r.DalalId == entity.Id)
+                || await _context.RoughSales.AnyAsync(r => r.DalalId == entity.Id)
+                || await _context.PolishLots.AnyAsync(r => r.DalalId == entity.Id)
+                || await _context.PolishSales.AnyAsync(r => r.DalalId == entity.Id)
+                || await _context.BoxSales.AnyAsync(r => r.DalalId == entity.Id)
+                || await _context.VendorIssues.AnyAsync(i => i.VendorId == entity.Id);
+            if (inUse)
+                return BadRequest("Cannot delete: this vendor is linked to transactions or consignments.");
+
+            _context.Vendors.Remove(entity);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
         // Helper Mapper Methods to convert C# entity structures to JavaScript local storage structures
         private static object MapRoughBuy(RoughBuy r) => new
         {
@@ -1270,6 +1381,7 @@ namespace backend.Controllers
                 var firstItem = t.Items.FirstOrDefault();
                 return new
                 {
+                    id = t.Id,
                     transferNo = t.TransferNo,
                     date = t.Date.ToString("yyyy-MM-dd"),
                     itemType = t.ItemType,
@@ -1285,6 +1397,7 @@ namespace backend.Controllers
             {
                 return new
                 {
+                    id = t.Id,
                     transferNo = t.TransferNo,
                     date = t.Date.ToString("yyyy-MM-dd"),
                     itemType = t.ItemType,
